@@ -1,0 +1,11 @@
+image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+
+pipelines:
+  default:
+    - step:
+        name: Lint and test
+        script:
+          - uv sync --frozen
+          - uv run ruff check
+          - uv run ruff format --check
+          - uv run pytest
