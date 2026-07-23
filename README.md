@@ -68,6 +68,10 @@ that isn't loaded raises `AttributeError` telling you to
 - **Concurrent pagination**: after the first page reveals the count, the
   remaining pages are fetched in parallel (bounded by `max_concurrency`,
   default 4) and yielded in order.
+- **Cursor pagination (NetBox 4.6+)**: pass `pagination="cursor"` to the
+  client to page with the `start` cursor instead, constant-time per page
+  on very large tables (pages are sequential in this mode, since each
+  cursor comes from the previous response).
 - **Diff-based writes**: `save()` PATCHes only what you changed, with
   NetBox's custom_fields merge semantics handled correctly.
 - **Bulk operations**:
