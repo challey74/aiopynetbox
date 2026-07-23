@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `register_model(app, endpoint, record_class)` to map plugin or custom
   endpoints to Record subclasses.
 
+### Fixed
+
+- `save()` and `delete()` on a Record without a `url` (e.g. a choice
+  field) now raise a clear ValueError instead of crashing inside httpx.
+
 ## [0.1.0] - 2026-07-23
 
 Initial release.
