@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apynetbox.endpoint import Endpoint
+from aiopynetbox.endpoint import Endpoint
 
 if TYPE_CHECKING:
-    from apynetbox.api import Api
+    from aiopynetbox.api import Api
 
 
 class App:

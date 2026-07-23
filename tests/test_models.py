@@ -1,4 +1,4 @@
-from apynetbox.models import Prefixes
+from aiopynetbox.models import Prefixes
 
 
 async def test_prefixes_endpoint_returns_model_class(nb):

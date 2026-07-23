@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apynetbox.exceptions import RequestError
-from apynetbox.models import ENDPOINT_MODELS
-from apynetbox.response import Record, RecordSet
+from aiopynetbox.exceptions import RequestError
+from aiopynetbox.models import ENDPOINT_MODELS
+from aiopynetbox.response import Record, RecordSet
 
 if TYPE_CHECKING:
-    from apynetbox.api import Api
-    from apynetbox.app import App
+    from aiopynetbox.api import Api
+    from aiopynetbox.app import App
 
 
 class Endpoint:

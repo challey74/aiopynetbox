@@ -1,4 +1,4 @@
-"""Api: the entry point to apynetbox."""
+"""Api: the entry point to aiopynetbox."""
 
 from __future__ import annotations
 
@@ -7,9 +7,9 @@ from typing import Any
 
 import httpx
 
-from apynetbox.app import App, PluginsApp
-from apynetbox.exceptions import AllocationError, ContentError, RequestError
-from apynetbox.response import Record
+from aiopynetbox.app import App, PluginsApp
+from aiopynetbox.exceptions import AllocationError, ContentError, RequestError
+from aiopynetbox.response import Record
 
 # NetBox v2 token prefix (introduced in NetBox 4.5.0)
 TOKEN_PREFIX = "nbt_"
@@ -27,7 +27,7 @@ class Api:
 
     Use as an async context manager so the connection pool is closed:
 
-        async with apynetbox.api("https://netbox", token="...") as nb:
+        async with aiopynetbox.api("https://netbox", token="...") as nb:
             device = await nb.dcim.devices.get(name="sw-1")
 
     Pass `client` to supply a custom httpx.AsyncClient (SSL config, mock

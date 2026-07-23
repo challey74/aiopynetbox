@@ -1,4 +1,4 @@
-# apynetbox
+# aiopynetbox
 
 Fully async NetBox API client for Python, built on [httpx](https://www.python-httpx.org/).
 
@@ -17,17 +17,17 @@ back.**
 ## Installation
 
 ```sh
-uv add apynetbox   # or: pip install apynetbox
+uv add aiopynetbox   # or: pip install aiopynetbox
 ```
 
 ## Quick start
 
 ```python
 import asyncio
-import apynetbox
+import aiopynetbox
 
 async def main():
-    async with apynetbox.api("https://netbox.example.com", token="...") as nb:
+    async with aiopynetbox.api("https://netbox.example.com", token="...") as nb:
         # single object
         device = await nb.dcim.devices.get(name="sw-1")
         print(device.name, device.status, device.site)
@@ -48,7 +48,7 @@ asyncio.run(main())
 The traversal (`nb.dcim.devices`), diff-based `save()`, and exception taxonomy
 all carry over. What changes is that implicit I/O becomes explicit:
 
-| pynetbox (sync)                    | apynetbox (async)                       |
+| pynetbox (sync)                    | aiopynetbox (async)                       |
 | ---------------------------------- | --------------------------------------- |
 | `nb.dcim.devices.get(name="x")`    | `await nb.dcim.devices.get(name="x")`   |
 | `for d in nb.dcim.devices.all()`   | `async for d in nb.dcim.devices.all()`  |
@@ -88,7 +88,7 @@ that isn't loaded raises `AttributeError` telling you to
   concurrent modification fails with a 412 error instead of being
   silently overwritten.
 - **Data source sync**: `await data_source.sync.create()`.
-- **Custom models**: `apynetbox.register_model("plugins/bgp", "sessions",
+- **Custom models**: `aiopynetbox.register_model("plugins/bgp", "sessions",
   BgpSession)` maps plugin endpoints to your own Record subclasses;
   `app.endpoint("literal_name")` reaches endpoint slugs that contain
   real underscores.
@@ -97,7 +97,7 @@ that isn't loaded raises `AttributeError` telling you to
 ## API tour
 
 ```python
-async with apynetbox.api(url, token=token) as nb:
+async with aiopynetbox.api(url, token=token) as nb:
     # read
     device = await nb.dcim.devices.get(123)               # by id (None if missing)
     device = await nb.dcim.devices.get(name="sw-1")       # by filter (ValueError if >1)
@@ -135,7 +135,7 @@ Pass your own `httpx.AsyncClient` for custom SSL, proxies, event hooks, or
 
 ```python
 client = httpx.AsyncClient(verify="/path/to/ca.pem", timeout=60)
-async with apynetbox.api(url, token=token, client=client) as nb:
+async with aiopynetbox.api(url, token=token, client=client) as nb:
     ...
 ```
 
