@@ -20,6 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: System :: Networking",
     "Typing :: Typed",
 ]
@@ -29,7 +30,7 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/challey74/apynetbox"
-Changelog = "https://github.com/challey74/apynetbox/blob/master/CHANGELOG.md"
+Changelog = "https://github.com/challey74/apynetbox/blob/main/CHANGELOG.md"
 Issues = "https://github.com/challey74/apynetbox/issues"
 
 [build-system]
