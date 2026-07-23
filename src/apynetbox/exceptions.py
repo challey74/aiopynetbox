@@ -28,6 +28,17 @@ class RequestError(Exception):
         super().__init__(self.message)
 
 
+class AllocationError(Exception):
+    """NetBox returned 409 Conflict for an allocation request
+    (e.g. available-ips with no room left)."""
+
+    def __init__(self, response: httpx.Response) -> None:
+        self.response = response
+        self.url = str(response.url)
+        self.error = "The requested allocation could not be fulfilled."
+        super().__init__(self.error)
+
+
 class ContentError(Exception):
     """A successful response contained non-JSON content."""
 

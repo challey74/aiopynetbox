@@ -12,6 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cursor-based pagination for NetBox 4.6+: `apynetbox.api(..., pagination="cursor")`
   pages list views with the `start` cursor (constant-time per page,
   sequential). Offset mode with concurrent page fan-out remains the default.
+- Optimistic locking (NetBox 4.6+): records fetched from a detail endpoint
+  store the response `ETag`; `save()` sends `If-Match`, so a concurrent
+  modification fails with a 412 `RequestError` instead of silently
+  overwriting it.
+- `AllocationError`, raised when NetBox returns 409 Conflict for an
+  allocation create (e.g. available-ips with no room left).
+- `Api.openapi()`: the OpenAPI spec, cached after the first call.
+- `Api.create_token(username, password)`: token provisioning; adopts the
+  new token (including the v2 `nbt_<key>.<token>` form) for subsequent
+  requests.
+- `data_source.sync.create()` to trigger a data source sync
+  (core/data-sources).
+- `App.endpoint(name)` for endpoints whose slug contains literal
+  underscores (attribute access converts `_` to `-`).
+- `register_model(app, endpoint, record_class)` to map plugin or custom
+  endpoints to Record subclasses.
 
 ## [0.1.0] - 2026-07-23
 

@@ -8,7 +8,8 @@ from typing import Any
 import httpx
 
 from apynetbox.app import App, PluginsApp
-from apynetbox.exceptions import ContentError, RequestError
+from apynetbox.exceptions import AllocationError, ContentError, RequestError
+from apynetbox.response import Record
 
 # NetBox v2 token prefix (introduced in NetBox 4.5.0)
 TOKEN_PREFIX = "nbt_"
@@ -55,6 +56,7 @@ class Api:
         self.token = token
         self.max_concurrency = max_concurrency
         self.pagination = pagination
+        self._openapi: dict[str, Any] | None = None
         # follow_redirects matches requests/pynetbox behavior: NetBox's
         # hyperlinked `url` fields may redirect (e.g. http->https behind a
         # proxy) and record methods fetch those urls directly.
@@ -96,6 +98,36 @@ class Api:
         scheme = "Bearer" if _is_v2_token(self.token) else "Token"
         return {"Authorization": "{} {}".format(scheme, self.token)}
 
+    async def _request_response(
+        self,
+        method: str,
+        url: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json: Any = None,
+        headers: dict[str, str] | None = None,
+    ) -> httpx.Response:
+        merged = {
+            "Accept": "application/json",
+            **self._auth_headers(),
+            **(headers or {}),
+        }
+        resp = await self._client.request(
+            method, url, params=params, json=json, headers=merged
+        )
+        if not resp.is_success:
+            if method == "POST" and resp.status_code == 409:
+                raise AllocationError(resp)
+            raise RequestError(resp)
+        return resp
+
+    @staticmethod
+    def _decode(resp: httpx.Response) -> Any:
+        try:
+            return resp.json()
+        except ValueError:
+            raise ContentError(resp) from None
+
     async def _request(
         self,
         method: str,
@@ -103,21 +135,14 @@ class Api:
         *,
         params: dict[str, Any] | None = None,
         json: Any = None,
+        headers: dict[str, str] | None = None,
     ) -> Any:
-        headers = {"Accept": "application/json", **self._auth_headers()}
-        resp = await self._client.request(
+        resp = await self._request_response(
             method, url, params=params, json=json, headers=headers
         )
         if method == "DELETE":
-            if resp.is_success:
-                return True
-            raise RequestError(resp)
-        if not resp.is_success:
-            raise RequestError(resp)
-        try:
-            return resp.json()
-        except ValueError:
-            raise ContentError(resp) from None
+            return True
+        return self._decode(resp)
 
     async def version(self) -> str:
         """The NetBox API version string, read from response headers."""
@@ -131,3 +156,29 @@ class Api:
     async def status(self) -> dict[str, Any]:
         """The /api/status/ payload (NetBox version, plugins, workers...)."""
         return await self._request("GET", "{}/status/".format(self.base_url))
+
+    async def openapi(self) -> dict[str, Any]:
+        """The OpenAPI spec (NetBox 3.5+), cached after the first call."""
+        if self._openapi is None:
+            self._openapi = await self._request(
+                "GET", "{}/schema/".format(self.base_url)
+            )
+        return self._openapi
+
+    async def create_token(self, username: str, password: str) -> Record:
+        """Provision an API token from NetBox credentials and adopt it for
+        subsequent requests.
+
+        For v2 tokens (NetBox 4.5+) `self.token` becomes the full
+        `nbt_<key>.<token>` auth value, which differs from `token.key`.
+        """
+        data = await self._request(
+            "POST",
+            "{}/users/tokens/provision/".format(self.base_url),
+            json={"username": username, "password": password},
+        )
+        if data.get("version") == 2:
+            self.token = "{}{}.{}".format(TOKEN_PREFIX, data["key"], data["token"])
+        else:
+            self.token = data.get("token") or data["key"]
+        return Record(data, self, full=True)

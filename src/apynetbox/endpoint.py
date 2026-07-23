@@ -14,9 +14,11 @@ if TYPE_CHECKING:
 
 
 class Endpoint:
-    def __init__(self, api: Api, app: App, name: str) -> None:
+    def __init__(
+        self, api: Api, app: App, name: str, literal_name: bool = False
+    ) -> None:
         self.api = api
-        self.name = name.replace("_", "-")
+        self.name = name if literal_name else name.replace("_", "-")
         self.url = "{}/{}/{}/".format(api.base_url, app.name, self.name)
         self.record_class = ENDPOINT_MODELS.get(
             "{}/{}".format(app.name, self.name), Record
@@ -31,12 +33,16 @@ class Endpoint:
         """
         if args:
             try:
-                data = await self.api._request("GET", "{}{}/".format(self.url, args[0]))
+                resp = await self.api._request_response(
+                    "GET", "{}{}/".format(self.url, args[0])
+                )
             except RequestError as e:
                 if e.status_code == 404:
                     return None
                 raise
-            return self.record_class(data, self.api, full=True)
+            record = self.record_class(self.api._decode(resp), self.api, full=True)
+            record._etag = resp.headers.get("ETag")
+            return record
         it = aiter(self.filter(**kwargs))
         try:
             first = await anext(it, None)
