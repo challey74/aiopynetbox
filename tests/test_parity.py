@@ -92,6 +92,17 @@ async def test_full_details_captures_etag(nb):
     assert device._etag == '"etag-1"'
 
 
+async def test_full_details_revalidates_with_304(nb, fake):
+    device = await nb.dcim.devices.get(1)
+    device.serial = "LOCAL-EDIT"
+    assert await device.full_details() is True
+    revalidation = fake.requests[-1]
+    assert revalidation.headers["If-None-Match"] == '"etag-1"'
+    # 304: server unchanged, local modifications survive the refresh
+    assert device.serial == "LOCAL-EDIT"
+    assert device.updates() == {"serial": "LOCAL-EDIT"}
+
+
 async def test_add_tags_write_only_field(nb, fake):
     device = await nb.dcim.devices.get(1)
     device.add_tags = ["prod"]
