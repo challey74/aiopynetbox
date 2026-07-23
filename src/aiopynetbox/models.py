@@ -8,10 +8,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from apynetbox.response import Record, RecordSet
+from aiopynetbox.response import Record, RecordSet
 
 if TYPE_CHECKING:
-    from apynetbox.api import Api
+    from aiopynetbox.api import Api
 
 
 class DetailEndpoint:

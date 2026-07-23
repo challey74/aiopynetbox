@@ -2,7 +2,7 @@ import httpx
 import pytest
 from conftest import BASE, FakeNetbox, make_api, make_device
 
-import apynetbox
+import aiopynetbox
 
 
 async def test_get_by_id(nb):
@@ -109,7 +109,7 @@ async def test_status(nb):
 
 
 async def test_request_error_on_500(nb):
-    with pytest.raises(apynetbox.RequestError, match="code 500"):
+    with pytest.raises(aiopynetbox.RequestError, match="code 500"):
         await nb.dcim.nonexistent.count()
 
 
@@ -118,8 +118,8 @@ async def test_content_error_on_non_json():
         return httpx.Response(200, text="<html>not netbox</html>")
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    async with apynetbox.api(BASE, client=client) as nb:
-        with pytest.raises(apynetbox.ContentError):
+    async with aiopynetbox.api(BASE, client=client) as nb:
+        with pytest.raises(aiopynetbox.ContentError):
             await nb.dcim.devices.get(1)
 
 
@@ -195,12 +195,12 @@ async def test_installed_plugins(nb):
 
 
 def test_version_attribute():
-    assert apynetbox.__version__
+    assert aiopynetbox.__version__
 
 
 def test_invalid_pagination_raises():
     with pytest.raises(ValueError, match="pagination"):
-        apynetbox.api(BASE, pagination="nope")
+        aiopynetbox.api(BASE, pagination="nope")
 
 
 async def test_cursor_pagination_follows_next_links():

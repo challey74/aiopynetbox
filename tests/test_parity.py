@@ -3,8 +3,8 @@ import json
 import pytest
 from conftest import BASE
 
-import apynetbox
-from apynetbox.models import ENDPOINT_MODELS, DataSources
+import aiopynetbox
+from aiopynetbox.models import ENDPOINT_MODELS, DataSources
 
 
 async def test_openapi_cached(nb, fake):
@@ -29,7 +29,7 @@ async def test_create_token_v1_plain_value(nb):
 
 async def test_allocation_error_on_conflict(nb):
     prefix = await nb.ipam.prefixes.get(1)
-    with pytest.raises(apynetbox.AllocationError, match="could not be fulfilled"):
+    with pytest.raises(aiopynetbox.AllocationError, match="could not be fulfilled"):
         await prefix.available_ips.create([{}, {}, {}, {}])
 
 
@@ -48,10 +48,10 @@ async def test_literal_endpoint_keeps_underscores(nb):
 
 
 async def test_register_model(nb):
-    class Widget(apynetbox.Record):
+    class Widget(aiopynetbox.Record):
         pass
 
-    apynetbox.register_model("plugins/test-plugin", "widgets", Widget)
+    aiopynetbox.register_model("plugins/test-plugin", "widgets", Widget)
     try:
         assert nb.plugins.test_plugin.widgets.record_class is Widget
     finally:
@@ -72,7 +72,7 @@ async def test_stale_etag_fails_with_412(nb):
     device = await nb.dcim.devices.get(1)
     device._etag = '"stale"'
     device.serial = "CLOBBER"
-    with pytest.raises(apynetbox.RequestError) as excinfo:
+    with pytest.raises(aiopynetbox.RequestError) as excinfo:
         await device.save()
     assert excinfo.value.status_code == 412
 

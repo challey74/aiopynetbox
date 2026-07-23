@@ -1,5 +1,5 @@
 [project]
-name = "apynetbox"
+name = "aiopynetbox"
 version = "0.1.0"
 description = "Fully async NetBox API client built on httpx"
 readme = "README.md"
@@ -29,9 +29,9 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/challey74/apynetbox"
-Changelog = "https://github.com/challey74/apynetbox/blob/main/CHANGELOG.md"
-Issues = "https://github.com/challey74/apynetbox/issues"
+Repository = "https://github.com/challey74/aiopynetbox"
+Changelog = "https://github.com/challey74/aiopynetbox/blob/main/CHANGELOG.md"
+Issues = "https://github.com/challey74/aiopynetbox/issues"
 
 [build-system]
 requires = ["uv_build>=0.9.21,<0.10.0"]

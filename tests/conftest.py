@@ -4,7 +4,7 @@ import re
 import httpx
 import pytest
 
-import apynetbox
+import aiopynetbox
 
 BASE = "http://netbox.test"
 
@@ -263,7 +263,7 @@ def fake():
 
 def make_api(fake, token="abc123", **kwargs):
     client = httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))
-    return apynetbox.api(BASE, token=token, client=client, **kwargs)
+    return aiopynetbox.api(BASE, token=token, client=client, **kwargs)
 
 
 @pytest.fixture

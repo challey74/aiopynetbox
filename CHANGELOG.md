@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Cursor-based pagination for NetBox 4.6+: `apynetbox.api(..., pagination="cursor")`
+- Cursor-based pagination for NetBox 4.6+: `aiopynetbox.api(..., pagination="cursor")`
   pages list views with the `start` cursor (constant-time per page,
   sequential). Offset mode with concurrent page fan-out remains the default.
 - Optimistic locking (NetBox 4.6+): records fetched from a detail endpoint

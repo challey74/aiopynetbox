@@ -9,9 +9,9 @@ from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from apynetbox.api import Api
-    from apynetbox.endpoint import Endpoint
-    from apynetbox.models import DetailEndpoint
+    from aiopynetbox.api import Api
+    from aiopynetbox.endpoint import Endpoint
+    from aiopynetbox.models import DetailEndpoint
 
 # Fields that hold arbitrary JSON and must never be coerced into Records.
 RAW_JSON_FIELDS = {"custom_fields", "local_context_data", "config_context"}

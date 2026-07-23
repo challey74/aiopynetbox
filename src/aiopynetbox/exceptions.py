@@ -1,4 +1,4 @@
-"""Exception types raised by apynetbox."""
+"""Exception types raised by aiopynetbox."""
 
 from __future__ import annotations
 
