@@ -39,6 +39,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "pyright>=1.1.411",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "ruff>=0.15.22",
@@ -53,3 +54,6 @@ extend-select = ["I", "ASYNC"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.pyright]
+include = ["src"]
