@@ -49,6 +49,14 @@ PREFIX_FULL = {
     "custom_fields": {},
 }
 
+DATA_SOURCE_FULL = {
+    "id": 1,
+    "url": f"{BASE}/api/core/data-sources/1/",
+    "display": "scripts",
+    "name": "scripts",
+    "status": {"value": "completed", "label": "Completed"},
+}
+
 DEVICE_OPTIONS = {
     "actions": {
         "POST": {
@@ -83,8 +91,33 @@ class FakeNetbox:
             return httpx.Response(200, json={}, headers={"API-Version": "4.5"})
         if path == "/api/status/":
             return httpx.Response(200, json={"netbox-version": "4.5.0"})
+        if path == "/api/schema/":
+            return httpx.Response(200, json={"openapi": "3.0.3", "paths": {}})
+        if path == "/api/users/tokens/provision/" and request.method == "POST":
+            body = json.loads(request.content)
+            if body["username"] == "v1user":
+                return httpx.Response(
+                    201, json={"id": 2, "display": "t", "key": "plainv1token"}
+                )
+            return httpx.Response(
+                201,
+                json={
+                    "id": 1,
+                    "display": "t",
+                    "key": "shortkey",
+                    "token": "plaintext",
+                    "version": 2,
+                },
+            )
         if path == "/api/plugins/installed-plugins/":
             return httpx.Response(200, json=[{"name": "test_plugin", "version": "1.0"}])
+
+        if path == "/api/core/data-sources/1/" and request.method == "GET":
+            return httpx.Response(200, json=DATA_SOURCE_FULL)
+        if path == "/api/core/data-sources/1/sync/" and request.method == "POST":
+            synced = dict(DATA_SOURCE_FULL)
+            synced["status"] = {"value": "syncing", "label": "Syncing"}
+            return httpx.Response(200, json=synced)
 
         if path == "/api/ipam/prefixes/1/" and request.method == "GET":
             return httpx.Response(200, json=PREFIX_FULL)
@@ -98,8 +131,13 @@ class FakeNetbox:
                     ],
                 )
             body = json.loads(request.content)
+            items = body if isinstance(body, list) else [body]
+            if len(items) > 3:
+                return httpx.Response(
+                    409, json={"detail": "Insufficient available IPs."}
+                )
             created = []
-            for n, item in enumerate(body if isinstance(body, list) else [body], 1):
+            for n, item in enumerate(items, 1):
                 ip = {
                     "id": n,
                     "url": f"{BASE}/api/ipam/ip-addresses/{n}/",
@@ -120,13 +158,18 @@ class FakeNetbox:
             device = self.devices.get(int(m.group(1)))
             if not device:
                 return httpx.Response(404, json={"detail": "Not found."})
+            etag = f'"etag-{device["id"]}"'
             if request.method == "PATCH":
+                if request.headers.get("If-Match", etag) != etag:
+                    return httpx.Response(412, json={"detail": "Precondition failed."})
                 device.update(json.loads(request.content))
-                return httpx.Response(200, json=device)
+                return httpx.Response(
+                    200, json=device, headers={"ETag": f'"etag-{device["id"]}-v2"'}
+                )
             if request.method == "DELETE":
                 del self.devices[device["id"]]
                 return httpx.Response(204)
-            return httpx.Response(200, json=device)
+            return httpx.Response(200, json=device, headers={"ETag": etag})
 
         if path == "/api/dcim/devices/":
             if request.method == "OPTIONS":

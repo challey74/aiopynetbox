@@ -83,6 +83,15 @@ that isn't loaded raises `AttributeError` telling you to
 - **Plugins**: `nb.plugins.<plugin>.<endpoint>` and
   `await nb.plugins.installed_plugins()`.
 - **Choices**: `await nb.dcim.devices.choices()` from OPTIONS metadata.
+- **Optimistic locking (NetBox 4.6+)**: records fetched from a detail
+  endpoint remember their `ETag`; `save()` sends `If-Match`, so a
+  concurrent modification fails with a 412 error instead of being
+  silently overwritten.
+- **Data source sync**: `await data_source.sync.create()`.
+- **Custom models**: `apynetbox.register_model("plugins/bgp", "sessions",
+  BgpSession)` maps plugin endpoints to your own Record subclasses;
+  `app.endpoint("literal_name")` reaches endpoint slugs that contain
+  real underscores.
 - **Typed**: full type hints and a `py.typed` marker.
 
 ## API tour

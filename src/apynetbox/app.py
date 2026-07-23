@@ -23,6 +23,11 @@ class App:
             raise AttributeError(name)
         return Endpoint(self._api, self, name)
 
+    def endpoint(self, name: str) -> Endpoint:
+        """An Endpoint whose slug is used verbatim (no underscore-to-dash
+        conversion), for plugin endpoints with literal underscores."""
+        return Endpoint(self._api, self, name, literal_name=True)
+
 
 class PluginsApp:
     """nb.plugins: attribute access routes into /api/plugins/<name>/...,

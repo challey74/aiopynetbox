@@ -69,8 +69,28 @@ class VlanGroups(Record):
         return DetailEndpoint(self, "available-vlans")
 
 
+class DataSources(Record):
+    """core/data-sources record with a sync trigger."""
+
+    @property
+    def sync(self) -> DetailEndpoint:
+        """POST with `await data_source.sync.create()` to trigger a sync."""
+        return DetailEndpoint(self, "sync")
+
+
 ENDPOINT_MODELS: dict[str, type[Record]] = {
+    "core/data-sources": DataSources,
     "ipam/prefixes": Prefixes,
     "ipam/ip-ranges": IpRanges,
     "ipam/vlan-groups": VlanGroups,
 }
+
+
+def register_model(app: str, endpoint: str, record_class: type[Record]) -> None:
+    """Register a Record subclass for an endpoint, e.g. a plugin's:
+
+        register_model("plugins/bgp", "sessions", BgpSession)
+
+    The endpoint name is converted like attribute access (`_` to `-`).
+    """
+    ENDPOINT_MODELS["{}/{}".format(app, endpoint.replace("_", "-"))] = record_class

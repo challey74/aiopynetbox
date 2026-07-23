@@ -57,6 +57,7 @@ class Record:
     """
 
     url: str | None = None
+    _etag: str | None = None
 
     def __init__(self, values: dict[str, Any], api: Api, full: bool = False) -> None:
         self._has_details = full
@@ -157,19 +158,30 @@ class Record:
         """Fetch and load the full object from its detail URL."""
         if not self.url:
             return False
-        data = await self._api._request("GET", self.url)
-        self._parse(data)
+        resp = await self._api._request_response("GET", self.url)
+        self._parse(self._api._decode(resp))
+        self._etag = resp.headers.get("ETag")
         self._has_details = True
         self._snapshot = copy.deepcopy(self.serialize())
         return True
 
     async def save(self) -> bool:
-        """PATCH changed fields to NetBox. Returns True if anything was sent."""
+        """PATCH changed fields to NetBox. Returns True if anything was sent.
+
+        Records fetched from a detail endpoint carry the response's ETag
+        (NetBox 4.6+); save() then sends If-Match, so a concurrent
+        modification fails with RequestError 412 instead of silently
+        overwriting it.
+        """
         updates = self.updates()
         if not updates:
             return False
-        data = await self._api._request("PATCH", self.url, json=updates)
-        self._parse(data)
+        headers = {"If-Match": self._etag} if self._etag else None
+        resp = await self._api._request_response(
+            "PATCH", self.url, json=updates, headers=headers
+        )
+        self._parse(self._api._decode(resp))
+        self._etag = resp.headers.get("ETag")
         self._snapshot = copy.deepcopy(self.serialize())
         return True
 
