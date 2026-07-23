@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import warnings
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, Iterator
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -176,9 +176,12 @@ class Record:
         updates = self.updates()
         if not updates:
             return False
+        url = self.url
+        if url is None:
+            raise ValueError("Record has no url and cannot be saved")
         headers = {"If-Match": self._etag} if self._etag else None
         resp = await self._api._request_response(
-            "PATCH", self.url, json=updates, headers=headers
+            "PATCH", url, json=updates, headers=headers
         )
         self._parse(self._api._decode(resp))
         self._etag = resp.headers.get("ETag")
@@ -192,7 +195,10 @@ class Record:
         return await self.save()
 
     async def delete(self) -> bool:
-        return await self._api._request("DELETE", self.url)
+        url = self.url
+        if url is None:
+            raise ValueError("Record has no url and cannot be deleted")
+        return await self._api._request("DELETE", url)
 
 
 class RecordSet:
@@ -215,10 +221,10 @@ class RecordSet:
         self.limit = limit
         self.offset = offset
 
-    def __aiter__(self) -> AsyncIterator[Record]:
+    def __aiter__(self) -> AsyncGenerator[Record]:
         return self._iter()
 
-    async def _iter(self) -> AsyncIterator[Record]:
+    async def _iter(self) -> AsyncGenerator[Record]:
         api = self.endpoint.api
         record_class = self.endpoint.record_class
         params = dict(self.filters)

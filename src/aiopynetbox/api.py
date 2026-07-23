@@ -160,9 +160,10 @@ class Api:
     async def openapi(self) -> dict[str, Any]:
         """The OpenAPI spec (NetBox 3.5+), cached after the first call."""
         if self._openapi is None:
-            self._openapi = await self._request(
+            spec: dict[str, Any] = await self._request(
                 "GET", "{}/schema/".format(self.base_url)
             )
+            self._openapi = spec
         return self._openapi
 
     async def create_token(self, username: str, password: str) -> Record:
