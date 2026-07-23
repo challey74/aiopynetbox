@@ -196,3 +196,41 @@ async def test_installed_plugins(nb):
 
 def test_version_attribute():
     assert apynetbox.__version__
+
+
+def test_invalid_pagination_raises():
+    with pytest.raises(ValueError, match="pagination"):
+        apynetbox.api(BASE, pagination="nope")
+
+
+async def test_cursor_pagination_follows_next_links():
+    fake = FakeNetbox(
+        devices=[make_device(i, f"sw-{i}") for i in range(1, 6)], page_size=2
+    )
+    async with make_api(fake, pagination="cursor") as nb:
+        names = [d.name async for d in nb.dcim.devices.all()]
+    assert names == [f"sw-{i}" for i in range(1, 6)]
+    list_requests = [r for r in fake.requests if r.url.path == "/api/dcim/devices/"]
+    starts = [r.url.params.get("start") for r in list_requests]
+    assert starts == ["0", "3", "5"]
+    assert all("offset" not in r.url.params for r in list_requests)
+
+
+async def test_cursor_with_explicit_offset_uses_offset(fake):
+    async with make_api(fake, pagination="cursor") as nb:
+        names = [d.name async for d in nb.dcim.devices.all(limit=2, offset=2)]
+    assert names == ["sw-3", "sw-4"]
+    request = fake.requests[-1]
+    assert request.url.params["offset"] == "2"
+    assert "start" not in request.url.params
+
+
+async def test_cursor_ordering_filter_warns(fake):
+    async with make_api(fake, pagination="cursor") as nb:
+        with pytest.warns(UserWarning, match="ordering has no effect"):
+            [d async for d in nb.dcim.devices.filter(name="sw-1", ordering="name")]
+
+
+async def test_cursor_count_still_works(fake):
+    async with make_api(fake, pagination="cursor") as nb:
+        assert await nb.dcim.devices.count() == 5

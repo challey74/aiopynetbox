@@ -40,6 +40,7 @@ Key mechanics in `response.py`:
 - `serialize()` collapses nested Records to `id`, falling back to `value` (choice fields); `RAW_JSON_FIELDS` (custom_fields, local_context_data, config_context) stay plain dicts.
 - Records created by endpoint methods are `full=True`; nested ones are brief - missing attrs on brief records raise AttributeError pointing at `full_details()`.
 - `RecordSet._iter()` fetches page 1, then `asyncio.gather`-style fans out remaining offsets via tasks bounded by `Api.max_concurrency` (default 4), yielding in offset order; the `finally` cancels pending tasks if iteration is abandoned.
+- Cursor mode (`Api(pagination="cursor")`, NetBox 4.6+): `_iter()` sends `start=0` and follows the server's `next` links sequentially (each carries the next cursor, last pk + 1; count comes back null so fan-out is impossible). An explicit offset always uses offset mode ('start'/'offset' are mutually exclusive server-side); an `ordering` filter warns because NetBox ignores it under cursor pagination.
 - Bulk ops: `RecordSet.update(**fields)`/`delete()` iterate the set for ids then send one list-body PATCH/DELETE to the endpoint URL; `Endpoint.update(list)`/`delete(list)` are the explicit-id forms.
 - `Record.__eq__`/`__hash__` key on `(url, id)`; records lacking either (choice fields) fall back to identity.
 
@@ -47,7 +48,7 @@ The package is fully type-annotated (`from __future__ import annotations` everyw
 
 Tests run entirely against `FakeNetbox` in [tests/conftest.py](tests/conftest.py) - an in-memory NetBox behind `httpx.MockTransport` (no network, no mocking library). Extend it when adding endpoints/behaviors.
 
-Not implemented yet (deliberately, add only when needed): napalm helpers (NetBox dropped built-in napalm in 3.5), cable trace helpers, file uploads (multipart), cursor pagination (NetBox 4.6+), OpenAPI filter validation.
+Not implemented yet (deliberately, add only when needed): napalm helpers (NetBox dropped built-in napalm in 3.5), cable trace helpers, file uploads (multipart), OpenAPI filter validation.
 
 ## Conventions
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import warnings
 from collections.abc import AsyncIterator, Iterator
 from typing import TYPE_CHECKING, Any
 
@@ -213,6 +214,18 @@ class RecordSet:
             params["limit"] = self.limit
         if self.offset is not None:
             params["offset"] = self.offset
+        # Cursor pagination (NetBox 4.6+) applies only to full iteration:
+        # an explicit offset requests a single page, and 'start'/'offset'
+        # are mutually exclusive on the server.
+        use_cursor = api.pagination == "cursor" and self.offset is None
+        if use_cursor:
+            if "ordering" in self.filters:
+                warnings.warn(
+                    "ordering has no effect with cursor pagination; results "
+                    "are returned in NetBox's fixed cursor order.",
+                    stacklevel=2,
+                )
+            params["start"] = 0
         data = await api._request("GET", self.endpoint.url, params=params)
         if isinstance(data, list):
             # Non-paginated detail routes (e.g. available-ips) return a list.
@@ -222,6 +235,17 @@ class RecordSet:
         results = data["results"]
         for item in results:
             yield record_class(item, api, full=True)
+        if use_cursor:
+            # Follow next links sequentially; each carries the next 'start'
+            # cursor (last pk + 1) computed by the server. Cursor mode omits
+            # the count, so page boundaries can't be precomputed for fan-out.
+            url = data.get("next")
+            while url:
+                page = await api._request("GET", url)
+                for item in page["results"]:
+                    yield record_class(item, api, full=True)
+                url = page.get("next")
+            return
         if self.offset is not None or not data.get("next") or not results:
             return
         page_size = len(results)

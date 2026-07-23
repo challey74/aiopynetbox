@@ -161,10 +161,32 @@ class FakeNetbox:
                 if all(
                     str(d.get(k)) == v
                     for k, v in params.items()
-                    if k not in ("limit", "offset")
+                    if k not in ("limit", "offset", "start")
                 )
             ]
             limit = int(params.get("limit", 0)) or self.page_size
+            if "start" in params:
+                # Cursor pagination (NetBox 4.6+): 'start' filters id >= value,
+                # count comes back null, next link carries the next cursor.
+                start = int(params["start"])
+                remaining = sorted(
+                    (d for d in matches if d["id"] >= start), key=lambda d: d["id"]
+                )
+                page = remaining[:limit]
+                next_url = (
+                    f"{BASE}{path}?start={page[-1]['id'] + 1}&limit={limit}"
+                    if len(remaining) > limit
+                    else None
+                )
+                return httpx.Response(
+                    200,
+                    json={
+                        "count": None,
+                        "next": next_url,
+                        "previous": None,
+                        "results": page,
+                    },
+                )
             offset = int(params.get("offset", 0))
             page = matches[offset : offset + limit]
             has_next = offset + limit < len(matches)
@@ -196,9 +218,9 @@ def fake():
     )
 
 
-def make_api(fake, token="abc123"):
+def make_api(fake, token="abc123", **kwargs):
     client = httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))
-    return apynetbox.api(BASE, token=token, client=client)
+    return apynetbox.api(BASE, token=token, client=client, **kwargs)
 
 
 @pytest.fixture

@@ -31,6 +31,12 @@ class Api:
 
     Pass `client` to supply a custom httpx.AsyncClient (SSL config, mock
     transports in tests, ...).
+
+    `pagination` selects how result sets page through list views:
+    "offset" (default) fetches pages concurrently once the first page
+    reveals the count; "cursor" (NetBox 4.6+) pages with the `start`
+    parameter in constant time per page, but sequentially, since each
+    page's cursor comes from the previous response.
     """
 
     def __init__(
@@ -40,11 +46,15 @@ class Api:
         *,
         timeout: float = 30.0,
         max_concurrency: int = 4,
+        pagination: str = "offset",
         client: httpx.AsyncClient | None = None,
     ) -> None:
+        if pagination not in ("offset", "cursor"):
+            raise ValueError("pagination must be 'offset' or 'cursor'")
         self.base_url = "{}/api".format(url.rstrip("/"))
         self.token = token
         self.max_concurrency = max_concurrency
+        self.pagination = pagination
         # follow_redirects matches requests/pynetbox behavior: NetBox's
         # hyperlinked `url` fields may redirect (e.g. http->https behind a
         # proxy) and record methods fetch those urls directly.
