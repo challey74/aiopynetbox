@@ -81,9 +81,20 @@ class FakeNetbox:
         self.page_size = page_size
         self.requests = []
         self.next_id = max(self.devices, default=0) + 1
+        # Failure injection for retry tests: each entry is consumed by one
+        # request before normal routing. An int is an HTTP status to return;
+        # "transport" raises httpx.ConnectError.
+        self.fail_next = []
 
     def handler(self, request):
         self.requests.append(request)
+        if self.fail_next:
+            failure = self.fail_next.pop(0)
+            if failure == "transport":
+                raise httpx.ConnectError("injected failure")
+            return httpx.Response(
+                failure, json={"detail": "injected"}, headers={"Retry-After": "0"}
+            )
         path = request.url.path
         params = request.url.params
 
@@ -169,6 +180,8 @@ class FakeNetbox:
             if request.method == "DELETE":
                 del self.devices[device["id"]]
                 return httpx.Response(204)
+            if request.headers.get("If-None-Match") == etag:
+                return httpx.Response(304, headers={"ETag": etag})
             return httpx.Response(200, json=device, headers={"ETag": etag})
 
         if path == "/api/dcim/devices/":

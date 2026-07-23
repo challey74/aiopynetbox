@@ -88,10 +88,17 @@ that isn't loaded raises `AttributeError` telling you to
 - **Plugins**: `nb.plugins.<plugin>.<endpoint>` and
   `await nb.plugins.installed_plugins()`.
 - **Choices**: `await nb.dcim.devices.choices()` from OPTIONS metadata.
+- **Retries with backoff**: 429 responses are retried automatically for
+  any method (honoring `Retry-After`); transient 502/503/504 and
+  connection failures are retried for GETs only, since an ambiguous
+  write may already have been processed. Exponential backoff with
+  jitter; tune with `retries=`, disable with `retries=0`.
 - **Optimistic locking (NetBox 4.6+)**: records fetched from a detail
   endpoint remember their `ETag`; `save()` sends `If-Match`, so a
   concurrent modification fails with a 412 error instead of being
-  silently overwritten.
+  silently overwritten. Repeat `full_details()` calls revalidate with
+  `If-None-Match`, so unchanged objects aren't re-downloaded or
+  re-parsed.
 - **Data source sync**: `await data_source.sync.create()`.
 - **Custom models**: `aiopynetbox.register_model("plugins/bgp", "sessions",
   BgpSession)` maps plugin endpoints to your own Record subclasses;
@@ -143,6 +150,11 @@ client = httpx.AsyncClient(verify="/path/to/ca.pem", timeout=60)
 async with aiopynetbox.api(url, token=token, client=client) as nb:
     ...
 ```
+
+Response caching is deliberately not built in: NetBox is a source of
+truth, and the library can't know your staleness tolerance. If you want
+HTTP caching, pass a client using [hishel](https://hishel.com/)'s
+`AsyncCacheTransport` and set the policy yourself.
 
 ## Development
 

@@ -203,6 +203,22 @@ def test_invalid_pagination_raises():
         aiopynetbox.api(BASE, pagination="nope")
 
 
+def test_backoff_honors_retry_after_with_cap():
+    nb = aiopynetbox.api(BASE)
+    assert nb._backoff(0, "2") == 2.0
+    assert nb._backoff(0, "3600") == 60.0
+
+
+def test_backoff_exponential_with_jitter():
+    nb = aiopynetbox.api(BASE)
+    # attempt 0: 0.5s base, jittered to 50-100%
+    assert 0.25 <= nb._backoff(0, None) <= 0.5
+    # capped at 8s base regardless of attempt
+    assert nb._backoff(10, None) <= 8.0
+    # non-numeric Retry-After (HTTP-date) falls back to backoff
+    assert nb._backoff(0, "Wed, 21 Oct 2026 07:28:00 GMT") <= 0.5
+
+
 async def test_cursor_pagination_follows_next_links():
     fake = FakeNetbox(
         devices=[make_device(i, f"sw-{i}") for i in range(1, 6)], page_size=2

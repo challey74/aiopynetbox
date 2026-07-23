@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `register_model(app, endpoint, record_class)` to map plugin or custom
   endpoints to Record subclasses.
 
+- Automatic retries with exponential backoff and jitter: 429 for any
+  method (honoring `Retry-After`), transient 502/503/504 and connection
+  failures for GETs only. Configurable via `Api(retries=)`, default 3.
+- `full_details()` revalidates repeat fetches with `If-None-Match`
+  (NetBox 4.6+); a 304 skips re-download and re-parsing.
+
 ### Fixed
 
 - `save()` and `delete()` on a Record without a `url` (e.g. a choice

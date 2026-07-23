@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import random
 from types import TracebackType
 from typing import Any
 
@@ -38,6 +40,12 @@ class Api:
     reveals the count; "cursor" (NetBox 4.6+) pages with the `start`
     parameter in constant time per page, but sequentially, since each
     page's cursor comes from the previous response.
+
+    `retries` bounds automatic retries with exponential backoff and
+    jitter: 429 responses are retried for any method (honoring
+    Retry-After); transient 502/503/504 and connection failures are
+    retried for GETs only, since an ambiguous write may have been
+    processed. `retries=0` disables.
     """
 
     def __init__(
@@ -48,6 +56,7 @@ class Api:
         timeout: float = 30.0,
         max_concurrency: int = 4,
         pagination: str = "offset",
+        retries: int = 3,
         client: httpx.AsyncClient | None = None,
     ) -> None:
         if pagination not in ("offset", "cursor"):
@@ -56,6 +65,7 @@ class Api:
         self.token = token
         self.max_concurrency = max_concurrency
         self.pagination = pagination
+        self.retries = retries
         self._openapi: dict[str, Any] | None = None
         # follow_redirects matches requests/pynetbox behavior: NetBox's
         # hyperlinked `url` fields may redirect (e.g. http->https behind a
@@ -98,6 +108,17 @@ class Api:
         scheme = "Bearer" if _is_v2_token(self.token) else "Token"
         return {"Authorization": "{} {}".format(scheme, self.token)}
 
+    def _backoff(self, attempt: int, retry_after: str | None) -> float:
+        """Delay in seconds before retry `attempt` (0-based)."""
+        if retry_after is not None:
+            try:
+                # Honor Retry-After, capped so a broken proxy can't stall us.
+                return min(float(retry_after), 60.0)
+            except ValueError:
+                pass  # HTTP-date form; fall through to exponential backoff
+        delay = min(0.5 * 2**attempt, 8.0)
+        return delay * (0.5 + random.random() / 2)
+
     async def _request_response(
         self,
         method: str,
@@ -112,14 +133,38 @@ class Api:
             **self._auth_headers(),
             **(headers or {}),
         }
-        resp = await self._client.request(
-            method, url, params=params, json=json, headers=merged
-        )
-        if not resp.is_success:
-            if method == "POST" and resp.status_code == 409:
-                raise AllocationError(resp)
-            raise RequestError(resp)
-        return resp
+        attempt = 0
+        while True:
+            retry_after = None
+            try:
+                resp = await self._client.request(
+                    method, url, params=params, json=json, headers=merged
+                )
+            except httpx.TransportError:
+                # An ambiguous failure is only safely repeatable for GETs:
+                # a timed-out write may have been processed server-side.
+                if method != "GET" or attempt >= self.retries:
+                    raise
+            else:
+                if resp.status_code == 429 and attempt < self.retries:
+                    # Rejected without processing; safe to retry any method.
+                    retry_after = resp.headers.get("Retry-After")
+                elif (
+                    resp.status_code in (502, 503, 504)
+                    and method == "GET"
+                    and attempt < self.retries
+                ):
+                    pass
+                else:
+                    if resp.status_code == 304 and "If-None-Match" in merged:
+                        return resp
+                    if not resp.is_success:
+                        if method == "POST" and resp.status_code == 409:
+                            raise AllocationError(resp)
+                        raise RequestError(resp)
+                    return resp
+            await asyncio.sleep(self._backoff(attempt, retry_after))
+            attempt += 1
 
     @staticmethod
     def _decode(resp: httpx.Response) -> Any:

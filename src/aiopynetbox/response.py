@@ -155,10 +155,19 @@ class Record:
         return {k: v for k, v in current.items() if k not in init or v != init[k]}
 
     async def full_details(self) -> bool:
-        """Fetch and load the full object from its detail URL."""
+        """Fetch and load the full object from its detail URL.
+
+        A repeat call revalidates with If-None-Match (NetBox 4.6+); a 304
+        means the object is unchanged on the server and nothing is
+        re-parsed, so local attribute changes survive the refresh.
+        """
         if not self.url:
             return False
-        resp = await self._api._request_response("GET", self.url)
+        headers = {"If-None-Match": self._etag} if self._etag else None
+        resp = await self._api._request_response("GET", self.url, headers=headers)
+        if resp.status_code == 304:
+            self._has_details = True
+            return True
         self._parse(self._api._decode(resp))
         self._etag = resp.headers.get("ETag")
         self._has_details = True
