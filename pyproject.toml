@@ -27,6 +27,11 @@ dependencies = [
     "httpx>=0.28.1",
 ]
 
+[project.urls]
+Repository = "https://github.com/challey74/apynetbox"
+Changelog = "https://github.com/challey74/apynetbox/blob/master/CHANGELOG.md"
+Issues = "https://github.com/challey74/apynetbox/issues"
+
 [build-system]
 requires = ["uv_build>=0.9.21,<0.10.0"]
 build-backend = "uv_build"
