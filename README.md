@@ -1,5 +1,10 @@
 # aiopynetbox
 
+[![CI](https://github.com/challey74/aiopynetbox/actions/workflows/ci.yml/badge.svg)](https://github.com/challey74/aiopynetbox/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/aiopynetbox)](https://pypi.org/project/aiopynetbox/)
+[![Python versions](https://img.shields.io/pypi/pyversions/aiopynetbox)](https://pypi.org/project/aiopynetbox/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 Fully async NetBox API client for Python, built on [httpx](https://www.python-httpx.org/).
 
 Inspired by [pynetbox](https://github.com/netbox-community/pynetbox), redesigned
