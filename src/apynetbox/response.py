@@ -51,8 +51,8 @@ class Record:
     it raises AttributeError and the caller must `await full_details()`.
 
     Records compare equal (and hash together) when they refer to the same
-    NetBox object — same detail url and id; records without both fall back
-    to identity comparison.
+    NetBox object, meaning same detail url and id; records without both
+    fall back to identity comparison.
     """
 
     url: str | None = None

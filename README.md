@@ -3,10 +3,10 @@
 Fully async NetBox API client for Python, built on [httpx](https://www.python-httpx.org/).
 
 Inspired by [pynetbox](https://github.com/netbox-community/pynetbox), redesigned
-for asyncio — this is not a port. pynetbox's core ergonomics (lazy attribute
+for asyncio. This is not a port: pynetbox's core ergonomics (lazy attribute
 fetches, `len()` on result sets, sync generators) depend on Python protocols
-that cannot be awaited, so the API surface here is deliberately different:
-**all I/O is explicit and awaitable, and nothing does network I/O behind your
+that cannot be awaited, so the API surface here is deliberately different.
+**All I/O is explicit and awaitable, and nothing does network I/O behind your
 back.**
 
 ## Requirements
@@ -32,7 +32,7 @@ async def main():
         device = await nb.dcim.devices.get(name="sw-1")
         print(device.name, device.status, device.site)
 
-        # filtered query — pages are fetched concurrently
+        # filtered query, pages are fetched concurrently
         async for iface in nb.dcim.interfaces.filter(device_id=device.id):
             print(iface.name)
 
@@ -59,27 +59,27 @@ all carry over. What changes is that implicit I/O becomes explicit:
 
 Nested records come back *brief* (as NetBox sends them). Touching a field
 that isn't loaded raises `AttributeError` telling you to
-`await record.full_details()` — it never fires a hidden HTTP request.
+`await record.full_details()`. It never fires a hidden HTTP request.
 
 ## Features
 
-- **Explicit async everywhere** — `httpx.AsyncClient` under the hood, used as
+- **Explicit async everywhere**: `httpx.AsyncClient` under the hood, used as
   an async context manager so the connection pool closes deterministically.
-- **Concurrent pagination** — after the first page reveals the count, the
+- **Concurrent pagination**: after the first page reveals the count, the
   remaining pages are fetched in parallel (bounded by `max_concurrency`,
   default 4) and yielded in order.
-- **Diff-based writes** — `save()` PATCHes only what you changed, with
+- **Diff-based writes**: `save()` PATCHes only what you changed, with
   NetBox's custom_fields merge semantics handled correctly.
-- **Bulk operations** —
+- **Bulk operations**:
   `await nb.dcim.devices.filter(status="offline").update(comments="audit")`,
   `await recordset.delete()`, and list forms on the endpoint
   (`endpoint.update([...])` / `endpoint.delete([...])`).
-- **IPAM allocation** — `await prefix.available_ips.create()` /
+- **IPAM allocation**: `await prefix.available_ips.create()` /
   `.list()`, plus `available_prefixes` and `available_vlans`.
-- **Plugins** — `nb.plugins.<plugin>.<endpoint>` and
+- **Plugins**: `nb.plugins.<plugin>.<endpoint>` and
   `await nb.plugins.installed_plugins()`.
-- **Choices** — `await nb.dcim.devices.choices()` from OPTIONS metadata.
-- **Typed** — full type hints and a `py.typed` marker.
+- **Choices**: `await nb.dcim.devices.choices()` from OPTIONS metadata.
+- **Typed**: full type hints and a `py.typed` marker.
 
 ## API tour
 
@@ -98,7 +98,7 @@ async with apynetbox.api(url, token=token) as nb:
     new = await nb.dcim.devices.create(name="sw-9", device_type=12, site=1, role=3)
     device.serial = "XYZ"
     await device.save()                                   # PATCH {"serial": "XYZ"}
-    await device.update({"serial": "XYZ", "comments": "…"})
+    await device.update({"serial": "XYZ", "comments": "..."})
     await device.delete()
 
     # bulk
@@ -139,4 +139,4 @@ uv run ruff format   # format
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0, see [LICENSE](LICENSE).
