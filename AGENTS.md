@@ -13,6 +13,7 @@ Package layout: `src/aiopynetbox/`, tests in `tests/`. Managed with `uv`.
 - `uv sync` - install/update the environment (Python 3.11+)
 - `uv run pytest` - run tests (`uv run pytest tests/test_foo.py::test_bar` for one test)
 - `uv run ruff check` / `uv run ruff format` - lint and format (line length 88, isort + ASYNC lint rules enabled)
+- `uv run pyright` - type check (src only)
 
 pytest-asyncio runs in `asyncio_mode = "auto"` - async test functions need no decorator.
 
