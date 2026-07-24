@@ -6,7 +6,7 @@ Source: https://demo.netbox.dev/api/schema/ (NetBox API 4.6.5 (4.6))
 The endpoint annotations exist only for static analysis (autocomplete,
 type checking); no attributes are created at runtime. App.__getattr__
 builds every Endpoint dynamically, so endpoints missing from this list
-still work.
+still work, and the hint classes in hints.pyi never exist at runtime.
 """
 
 from __future__ import annotations
@@ -16,175 +16,175 @@ from typing import TYPE_CHECKING
 from aiopynetbox.app import App
 
 if TYPE_CHECKING:
-    from aiopynetbox.endpoint import Endpoint
+    from aiopynetbox import hints
 
 
 class CircuitsApp(App):
-    circuit_group_assignments: Endpoint
-    circuit_groups: Endpoint
-    circuit_terminations: Endpoint
-    circuit_types: Endpoint
-    circuits: Endpoint
-    provider_accounts: Endpoint
-    provider_networks: Endpoint
-    providers: Endpoint
-    virtual_circuit_terminations: Endpoint
-    virtual_circuit_types: Endpoint
-    virtual_circuits: Endpoint
+    circuit_group_assignments: hints.CircuitsCircuitGroupAssignmentsEndpoint
+    circuit_groups: hints.CircuitsCircuitGroupsEndpoint
+    circuit_terminations: hints.CircuitsCircuitTerminationsEndpoint
+    circuit_types: hints.CircuitsCircuitTypesEndpoint
+    circuits: hints.CircuitsCircuitsEndpoint
+    provider_accounts: hints.CircuitsProviderAccountsEndpoint
+    provider_networks: hints.CircuitsProviderNetworksEndpoint
+    providers: hints.CircuitsProvidersEndpoint
+    virtual_circuit_terminations: hints.CircuitsVirtualCircuitTerminationsEndpoint
+    virtual_circuit_types: hints.CircuitsVirtualCircuitTypesEndpoint
+    virtual_circuits: hints.CircuitsVirtualCircuitsEndpoint
 
 
 class CoreApp(App):
-    background_queues: Endpoint
-    background_tasks: Endpoint
-    background_workers: Endpoint
-    data_files: Endpoint
-    data_sources: Endpoint
-    jobs: Endpoint
-    object_changes: Endpoint
-    object_types: Endpoint
+    background_queues: hints.CoreBackgroundQueuesEndpoint
+    background_tasks: hints.CoreBackgroundTasksEndpoint
+    background_workers: hints.CoreBackgroundWorkersEndpoint
+    data_files: hints.CoreDataFilesEndpoint
+    data_sources: hints.CoreDataSourcesEndpoint
+    jobs: hints.CoreJobsEndpoint
+    object_changes: hints.CoreObjectChangesEndpoint
+    object_types: hints.CoreObjectTypesEndpoint
 
 
 class DcimApp(App):
-    cable_bundles: Endpoint
-    cable_terminations: Endpoint
-    cables: Endpoint
-    connected_device: Endpoint
-    console_port_templates: Endpoint
-    console_ports: Endpoint
-    console_server_port_templates: Endpoint
-    console_server_ports: Endpoint
-    device_bay_templates: Endpoint
-    device_bays: Endpoint
-    device_roles: Endpoint
-    device_types: Endpoint
-    devices: Endpoint
-    front_port_templates: Endpoint
-    front_ports: Endpoint
-    interface_templates: Endpoint
-    interfaces: Endpoint
-    inventory_item_roles: Endpoint
-    inventory_item_templates: Endpoint
-    inventory_items: Endpoint
-    locations: Endpoint
-    mac_addresses: Endpoint
-    manufacturers: Endpoint
-    module_bay_templates: Endpoint
-    module_bays: Endpoint
-    module_type_profiles: Endpoint
-    module_types: Endpoint
-    modules: Endpoint
-    platforms: Endpoint
-    power_feeds: Endpoint
-    power_outlet_templates: Endpoint
-    power_outlets: Endpoint
-    power_panels: Endpoint
-    power_port_templates: Endpoint
-    power_ports: Endpoint
-    rack_groups: Endpoint
-    rack_reservations: Endpoint
-    rack_roles: Endpoint
-    rack_types: Endpoint
-    racks: Endpoint
-    rear_port_templates: Endpoint
-    rear_ports: Endpoint
-    regions: Endpoint
-    site_groups: Endpoint
-    sites: Endpoint
-    virtual_chassis: Endpoint
-    virtual_device_contexts: Endpoint
+    cable_bundles: hints.DcimCableBundlesEndpoint
+    cable_terminations: hints.DcimCableTerminationsEndpoint
+    cables: hints.DcimCablesEndpoint
+    connected_device: hints.DcimConnectedDeviceEndpoint
+    console_port_templates: hints.DcimConsolePortTemplatesEndpoint
+    console_ports: hints.DcimConsolePortsEndpoint
+    console_server_port_templates: hints.DcimConsoleServerPortTemplatesEndpoint
+    console_server_ports: hints.DcimConsoleServerPortsEndpoint
+    device_bay_templates: hints.DcimDeviceBayTemplatesEndpoint
+    device_bays: hints.DcimDeviceBaysEndpoint
+    device_roles: hints.DcimDeviceRolesEndpoint
+    device_types: hints.DcimDeviceTypesEndpoint
+    devices: hints.DcimDevicesEndpoint
+    front_port_templates: hints.DcimFrontPortTemplatesEndpoint
+    front_ports: hints.DcimFrontPortsEndpoint
+    interface_templates: hints.DcimInterfaceTemplatesEndpoint
+    interfaces: hints.DcimInterfacesEndpoint
+    inventory_item_roles: hints.DcimInventoryItemRolesEndpoint
+    inventory_item_templates: hints.DcimInventoryItemTemplatesEndpoint
+    inventory_items: hints.DcimInventoryItemsEndpoint
+    locations: hints.DcimLocationsEndpoint
+    mac_addresses: hints.DcimMacAddressesEndpoint
+    manufacturers: hints.DcimManufacturersEndpoint
+    module_bay_templates: hints.DcimModuleBayTemplatesEndpoint
+    module_bays: hints.DcimModuleBaysEndpoint
+    module_type_profiles: hints.DcimModuleTypeProfilesEndpoint
+    module_types: hints.DcimModuleTypesEndpoint
+    modules: hints.DcimModulesEndpoint
+    platforms: hints.DcimPlatformsEndpoint
+    power_feeds: hints.DcimPowerFeedsEndpoint
+    power_outlet_templates: hints.DcimPowerOutletTemplatesEndpoint
+    power_outlets: hints.DcimPowerOutletsEndpoint
+    power_panels: hints.DcimPowerPanelsEndpoint
+    power_port_templates: hints.DcimPowerPortTemplatesEndpoint
+    power_ports: hints.DcimPowerPortsEndpoint
+    rack_groups: hints.DcimRackGroupsEndpoint
+    rack_reservations: hints.DcimRackReservationsEndpoint
+    rack_roles: hints.DcimRackRolesEndpoint
+    rack_types: hints.DcimRackTypesEndpoint
+    racks: hints.DcimRacksEndpoint
+    rear_port_templates: hints.DcimRearPortTemplatesEndpoint
+    rear_ports: hints.DcimRearPortsEndpoint
+    regions: hints.DcimRegionsEndpoint
+    site_groups: hints.DcimSiteGroupsEndpoint
+    sites: hints.DcimSitesEndpoint
+    virtual_chassis: hints.DcimVirtualChassisEndpoint
+    virtual_device_contexts: hints.DcimVirtualDeviceContextsEndpoint
 
 
 class ExtrasApp(App):
-    bookmarks: Endpoint
-    config_context_profiles: Endpoint
-    config_contexts: Endpoint
-    config_templates: Endpoint
-    custom_field_choice_sets: Endpoint
-    custom_fields: Endpoint
-    custom_links: Endpoint
-    dashboard: Endpoint
-    event_rules: Endpoint
-    export_templates: Endpoint
-    image_attachments: Endpoint
-    journal_entries: Endpoint
-    notification_groups: Endpoint
-    notifications: Endpoint
-    saved_filters: Endpoint
-    scripts: Endpoint
-    subscriptions: Endpoint
-    table_configs: Endpoint
-    tagged_objects: Endpoint
-    tags: Endpoint
-    webhooks: Endpoint
+    bookmarks: hints.ExtrasBookmarksEndpoint
+    config_context_profiles: hints.ExtrasConfigContextProfilesEndpoint
+    config_contexts: hints.ExtrasConfigContextsEndpoint
+    config_templates: hints.ExtrasConfigTemplatesEndpoint
+    custom_field_choice_sets: hints.ExtrasCustomFieldChoiceSetsEndpoint
+    custom_fields: hints.ExtrasCustomFieldsEndpoint
+    custom_links: hints.ExtrasCustomLinksEndpoint
+    dashboard: hints.ExtrasDashboardEndpoint
+    event_rules: hints.ExtrasEventRulesEndpoint
+    export_templates: hints.ExtrasExportTemplatesEndpoint
+    image_attachments: hints.ExtrasImageAttachmentsEndpoint
+    journal_entries: hints.ExtrasJournalEntriesEndpoint
+    notification_groups: hints.ExtrasNotificationGroupsEndpoint
+    notifications: hints.ExtrasNotificationsEndpoint
+    saved_filters: hints.ExtrasSavedFiltersEndpoint
+    scripts: hints.ExtrasScriptsEndpoint
+    subscriptions: hints.ExtrasSubscriptionsEndpoint
+    table_configs: hints.ExtrasTableConfigsEndpoint
+    tagged_objects: hints.ExtrasTaggedObjectsEndpoint
+    tags: hints.ExtrasTagsEndpoint
+    webhooks: hints.ExtrasWebhooksEndpoint
 
 
 class IpamApp(App):
-    aggregates: Endpoint
-    asn_ranges: Endpoint
-    asns: Endpoint
-    fhrp_group_assignments: Endpoint
-    fhrp_groups: Endpoint
-    ip_addresses: Endpoint
-    ip_ranges: Endpoint
-    prefixes: Endpoint
-    rirs: Endpoint
-    roles: Endpoint
-    route_targets: Endpoint
-    service_templates: Endpoint
-    services: Endpoint
-    vlan_groups: Endpoint
-    vlan_translation_policies: Endpoint
-    vlan_translation_rules: Endpoint
-    vlans: Endpoint
-    vrfs: Endpoint
+    aggregates: hints.IpamAggregatesEndpoint
+    asn_ranges: hints.IpamAsnRangesEndpoint
+    asns: hints.IpamAsnsEndpoint
+    fhrp_group_assignments: hints.IpamFhrpGroupAssignmentsEndpoint
+    fhrp_groups: hints.IpamFhrpGroupsEndpoint
+    ip_addresses: hints.IpamIpAddressesEndpoint
+    ip_ranges: hints.IpamIpRangesEndpoint
+    prefixes: hints.IpamPrefixesEndpoint
+    rirs: hints.IpamRirsEndpoint
+    roles: hints.IpamRolesEndpoint
+    route_targets: hints.IpamRouteTargetsEndpoint
+    service_templates: hints.IpamServiceTemplatesEndpoint
+    services: hints.IpamServicesEndpoint
+    vlan_groups: hints.IpamVlanGroupsEndpoint
+    vlan_translation_policies: hints.IpamVlanTranslationPoliciesEndpoint
+    vlan_translation_rules: hints.IpamVlanTranslationRulesEndpoint
+    vlans: hints.IpamVlansEndpoint
+    vrfs: hints.IpamVrfsEndpoint
 
 
 class TenancyApp(App):
-    contact_assignments: Endpoint
-    contact_groups: Endpoint
-    contact_roles: Endpoint
-    contacts: Endpoint
-    tenant_groups: Endpoint
-    tenants: Endpoint
+    contact_assignments: hints.TenancyContactAssignmentsEndpoint
+    contact_groups: hints.TenancyContactGroupsEndpoint
+    contact_roles: hints.TenancyContactRolesEndpoint
+    contacts: hints.TenancyContactsEndpoint
+    tenant_groups: hints.TenancyTenantGroupsEndpoint
+    tenants: hints.TenancyTenantsEndpoint
 
 
 class UsersApp(App):
-    config: Endpoint
-    groups: Endpoint
-    owner_groups: Endpoint
-    owners: Endpoint
-    permissions: Endpoint
-    tokens: Endpoint
-    users: Endpoint
+    config: hints.UsersConfigEndpoint
+    groups: hints.UsersGroupsEndpoint
+    owner_groups: hints.UsersOwnerGroupsEndpoint
+    owners: hints.UsersOwnersEndpoint
+    permissions: hints.UsersPermissionsEndpoint
+    tokens: hints.UsersTokensEndpoint
+    users: hints.UsersUsersEndpoint
 
 
 class VirtualizationApp(App):
-    cluster_groups: Endpoint
-    cluster_types: Endpoint
-    clusters: Endpoint
-    interfaces: Endpoint
-    virtual_disks: Endpoint
-    virtual_machine_types: Endpoint
-    virtual_machines: Endpoint
+    cluster_groups: hints.VirtualizationClusterGroupsEndpoint
+    cluster_types: hints.VirtualizationClusterTypesEndpoint
+    clusters: hints.VirtualizationClustersEndpoint
+    interfaces: hints.VirtualizationInterfacesEndpoint
+    virtual_disks: hints.VirtualizationVirtualDisksEndpoint
+    virtual_machine_types: hints.VirtualizationVirtualMachineTypesEndpoint
+    virtual_machines: hints.VirtualizationVirtualMachinesEndpoint
 
 
 class VpnApp(App):
-    ike_policies: Endpoint
-    ike_proposals: Endpoint
-    ipsec_policies: Endpoint
-    ipsec_profiles: Endpoint
-    ipsec_proposals: Endpoint
-    l2vpn_terminations: Endpoint
-    l2vpns: Endpoint
-    tunnel_groups: Endpoint
-    tunnel_terminations: Endpoint
-    tunnels: Endpoint
+    ike_policies: hints.VpnIkePoliciesEndpoint
+    ike_proposals: hints.VpnIkeProposalsEndpoint
+    ipsec_policies: hints.VpnIpsecPoliciesEndpoint
+    ipsec_profiles: hints.VpnIpsecProfilesEndpoint
+    ipsec_proposals: hints.VpnIpsecProposalsEndpoint
+    l2vpn_terminations: hints.VpnL2vpnTerminationsEndpoint
+    l2vpns: hints.VpnL2vpnsEndpoint
+    tunnel_groups: hints.VpnTunnelGroupsEndpoint
+    tunnel_terminations: hints.VpnTunnelTerminationsEndpoint
+    tunnels: hints.VpnTunnelsEndpoint
 
 
 class WirelessApp(App):
-    wireless_lan_groups: Endpoint
-    wireless_lans: Endpoint
-    wireless_links: Endpoint
+    wireless_lan_groups: hints.WirelessWirelessLanGroupsEndpoint
+    wireless_lans: hints.WirelessWirelessLansEndpoint
+    wireless_links: hints.WirelessWirelessLinksEndpoint
 
 
 APP_CLASSES: dict[str, type[App]] = {

@@ -25,16 +25,18 @@ class Endpoint:
         )
         self._choices: dict[str, list[dict[str, Any]]] | None = None
 
-    async def get(self, *args: int | str, **kwargs: Any) -> Record | None:
+    async def get(
+        self, id: int | str | None = None, /, **kwargs: Any
+    ) -> Record | None:
         """Get a single Record by id or by filter kwargs.
 
         Returns None if nothing matches. Raises ValueError if kwargs match
         more than one object.
         """
-        if args:
+        if id is not None:
             try:
                 resp = await self.api._request_response(
-                    "GET", "{}{}/".format(self.url, args[0])
+                    "GET", "{}{}/".format(self.url, id)
                 )
             except RequestError as e:
                 if e.status_code == 404:

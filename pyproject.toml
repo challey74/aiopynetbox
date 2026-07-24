@@ -57,3 +57,5 @@ testpaths = ["tests"]
 
 [tool.pyright]
 include = ["src"]
+# hints.pyi is deliberately stub-only (never imported at runtime).
+reportMissingModuleSource = false
