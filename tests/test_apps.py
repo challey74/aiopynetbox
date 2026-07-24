@@ -4,9 +4,9 @@ from pathlib import Path
 from conftest import BASE
 
 import aiopynetbox
-from aiopynetbox.apps import APP_CLASSES
+from aiopynetbox.apps_generated import APP_CLASSES
 
-HINTS = Path(aiopynetbox.__file__).parent / "hints.pyi"
+HINTS = Path(aiopynetbox.__file__).parent / "hints_generated.pyi"
 
 
 async def test_every_generated_app_is_wired(nb):

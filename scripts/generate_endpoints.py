@@ -2,8 +2,8 @@
 
 Outputs two files:
 
-- src/aiopynetbox/apps.py - typed App subclasses (endpoint-name hints)
-- src/aiopynetbox/hints.pyi - stub-only per-endpoint classes with
+- src/aiopynetbox/apps_generated.py - typed App subclasses (endpoint-name hints)
+- src/aiopynetbox/hints_generated.pyi - stub-only per-endpoint classes with
   TypedDict-backed kwargs overloads for filter/get/count/create
 
 Usage:
@@ -58,7 +58,7 @@ Source: {source} (NetBox API {version})
 The endpoint annotations exist only for static analysis (autocomplete,
 type checking); no attributes are created at runtime. App.__getattr__
 builds every Endpoint dynamically, so endpoints missing from this list
-still work, and the hint classes in hints.pyi never exist at runtime.
+still work, and the hint classes in hints_generated.pyi never exist at runtime.
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ from typing import TYPE_CHECKING
 from aiopynetbox.app import App
 
 if TYPE_CHECKING:
-    from aiopynetbox import hints
+    from aiopynetbox import hints_generated as hints
 '''
 
 HINTS_HEADER = '''"""Stub-only kwargs hints generated from the NetBox OpenAPI schema.
@@ -131,7 +131,7 @@ def create_fields(operation: dict[str, Any], components: dict[str, Any]) -> set[
 
 
 def endpoint_stub(app: str, attr: str, filters: list[str], fields: list[str]) -> str:
-    """One endpoint's TypedDicts + Endpoint subclass for hints.pyi."""
+    """One endpoint's TypedDicts + Endpoint subclass for hints_generated.pyi."""
     cls = f"{app.title()}{pascal(attr)}"
     record = MODEL_RETURNS.get((app, attr), "Record")
     out: list[str] = []
@@ -224,12 +224,12 @@ def main() -> None:
         "APP_CLASSES: dict[str, type[App]] = {\n" + "\n".join(mapping) + "\n}"
     )
 
-    (SRC / "apps.py").write_text("\n\n\n".join(apps_chunks) + "\n")
-    (SRC / "hints.pyi").write_text("\n\n\n".join(hints_chunks) + "\n")
+    (SRC / "apps_generated.py").write_text("\n\n\n".join(apps_chunks) + "\n")
+    (SRC / "hints_generated.pyi").write_text("\n\n\n".join(hints_chunks) + "\n")
     total = sum(len(v) for v in apps.values())
     params = sum(len(f) for v in apps.values() for f, _ in v.values())
     print(
-        f"wrote apps.py + hints.pyi ({total} endpoints, {params} filter params, "
+        f"wrote apps_generated.py + hints_generated.pyi ({total} endpoints, {params} filter params, "
         f"NetBox {version})"
     )
 

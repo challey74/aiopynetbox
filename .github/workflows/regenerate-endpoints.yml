@@ -16,7 +16,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen
       - run: uv run python scripts/generate_endpoints.py
-      - run: uv run ruff format src/aiopynetbox/apps.py src/aiopynetbox/hints.pyi
+      - run: uv run ruff format src/aiopynetbox/apps_generated.py src/aiopynetbox/hints_generated.pyi
       - run: uv run pyright
       - run: uv run pytest
       - uses: peter-evans/create-pull-request@v7
@@ -25,7 +25,7 @@ jobs:
           title: "chore: regenerate endpoint hints"
           body: >
             Automated regeneration of the typed endpoint hints in
-            src/aiopynetbox/apps.py from demo.netbox.dev's OpenAPI schema.
+            src/aiopynetbox/apps_generated.py from demo.netbox.dev's OpenAPI schema.
             A diff here usually means a new NetBox release added or removed
             endpoints.
           branch: regenerate-endpoints

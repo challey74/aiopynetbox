@@ -10,7 +10,7 @@ from typing import Any, Self
 import httpx
 
 from aiopynetbox.app import PluginsApp
-from aiopynetbox.apps import (
+from aiopynetbox.apps_generated import (
     CircuitsApp,
     CoreApp,
     DcimApp,

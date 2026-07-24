@@ -6,7 +6,7 @@ Source: https://demo.netbox.dev/api/schema/ (NetBox API 4.6.5 (4.6))
 The endpoint annotations exist only for static analysis (autocomplete,
 type checking); no attributes are created at runtime. App.__getattr__
 builds every Endpoint dynamically, so endpoints missing from this list
-still work, and the hint classes in hints.pyi never exist at runtime.
+still work, and the hint classes in hints_generated.pyi never exist at runtime.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 from aiopynetbox.app import App
 
 if TYPE_CHECKING:
-    from aiopynetbox import hints
+    from aiopynetbox import hints_generated as hints
 
 
 class CircuitsApp(App):
