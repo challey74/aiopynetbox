@@ -120,9 +120,7 @@ def schema_properties(schema: dict[str, Any], components: dict[str, Any]) -> set
 
 def filter_params(operation: dict[str, Any]) -> set[str]:
     return {
-        p["name"]
-        for p in operation.get("parameters", [])
-        if p.get("in") == "query"
+        p["name"] for p in operation.get("parameters", []) if p.get("in") == "query"
     }
 
 

@@ -25,9 +25,7 @@ class Endpoint:
         )
         self._choices: dict[str, list[dict[str, Any]]] | None = None
 
-    async def get(
-        self, id: int | str | None = None, /, **kwargs: Any
-    ) -> Record | None:
+    async def get(self, id: int | str | None = None, /, **kwargs: Any) -> Record | None:
         """Get a single Record by id or by filter kwargs.
 
         Returns None if nothing matches. Raises ValueError if kwargs match
