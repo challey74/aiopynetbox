@@ -144,6 +144,22 @@ async with aiopynetbox.api(url, token=token) as nb:
     print(await nb.status())
 ```
 
+### Long-lived apps (FastAPI, services)
+
+Create the client once and share it; the async context manager is
+one-shot, so enter it for the app's lifetime, not per request:
+
+```python
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with aiopynetbox.api(url, token=token) as nb:
+        app.state.nb = nb
+        yield  # handlers use `await app.state.nb...`; pool closes on shutdown
+```
+
+One shared instance is safe under concurrent requests. See
+[examples/fastapi_app.py](examples/fastapi_app.py) for a runnable app.
+
 ### Custom httpx client
 
 Pass your own `httpx.AsyncClient` for custom SSL, proxies, event hooks, or
@@ -154,6 +170,10 @@ client = httpx.AsyncClient(verify="/path/to/ca.pem", timeout=60)
 async with aiopynetbox.api(url, token=token, client=client) as nb:
     ...
 ```
+
+Per httpx convention, a client you pass in is yours to close: `aclose()`
+and the context manager only close clients the Api created itself, so
+one client can safely back several Api instances.
 
 Response caching is deliberately not built in: NetBox is a source of
 truth, and the library can't know your staleness tolerance. If you want

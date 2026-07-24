@@ -82,6 +82,7 @@ class Api:
         # follow_redirects matches requests/pynetbox behavior: NetBox's
         # hyperlinked `url` fields may redirect (e.g. http->https behind a
         # proxy) and record methods fetch those urls directly.
+        self._owns_client = client is None
         self._client = (
             client
             if client is not None
@@ -112,7 +113,14 @@ class Api:
         await self.aclose()
 
     async def aclose(self) -> None:
-        await self._client.aclose()
+        """Close the connection pool, if this Api created it.
+
+        A client passed in via `client=` is the caller's to close
+        (httpx convention), so sharing one client across Api instances
+        is safe.
+        """
+        if self._owns_client:
+            await self._client.aclose()
 
     def _auth_headers(self) -> dict[str, str]:
         if not self.token:

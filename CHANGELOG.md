@@ -47,6 +47,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   plugin params remain legal. `nb.ipam.prefixes.get()` and friends now
   also return their model subclass types.
 
+- A runnable FastAPI example (`examples/fastapi_app.py`) showing the
+  app-state / lifespan usage pattern.
+
+### Changed
+
+- `aclose()` (and the async context manager) now closes only clients
+  the Api created; a client passed via `client=` stays open, per httpx
+  convention, so one client can back several Api instances.
+
 ### Fixed
 
 - `save()` and `delete()` on a Record without a `url` (e.g. a choice
