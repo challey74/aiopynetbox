@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Fully async NetBox API client built on httpx"
 readme = "README.md"
 authors = [
-    { name = "Cody Halley", email = "cody.m.halley@gmail.com" }
+    { name = "Cody Halley" }
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
