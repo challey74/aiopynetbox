@@ -19,10 +19,8 @@ class Endpoint:
     ) -> None:
         self.api = api
         self.name = name if literal_name else name.replace("_", "-")
-        self.url = "{}/{}/{}/".format(api.base_url, app.name, self.name)
-        self.record_class = ENDPOINT_MODELS.get(
-            "{}/{}".format(app.name, self.name), Record
-        )
+        self.url = f"{api.base_url}/{app.name}/{self.name}/"
+        self.record_class = ENDPOINT_MODELS.get(f"{app.name}/{self.name}", Record)
         self._choices: dict[str, list[dict[str, Any]]] | None = None
 
     async def get(self, id: int | str | None = None, /, **kwargs: Any) -> Record | None:
@@ -33,9 +31,7 @@ class Endpoint:
         """
         if id is not None:
             try:
-                resp = await self.api._request_response(
-                    "GET", "{}{}/".format(self.url, id)
-                )
+                resp = await self.api._request_response("GET", f"{self.url}{id}/")
             except RequestError as e:
                 if e.status_code == 404:
                     return None
@@ -108,9 +104,7 @@ class Endpoint:
         actions = data.get("actions", {})
         post = actions.get("POST") or actions.get("PUT")
         if post is None:
-            raise ValueError(
-                "Unexpected format in the OPTIONS response at {}".format(self.url)
-            )
+            raise ValueError(f"Unexpected format in the OPTIONS response at {self.url}")
         self._choices = {
             field: meta["choices"] for field, meta in post.items() if "choices" in meta
         }

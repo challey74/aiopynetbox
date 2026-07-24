@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import random
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 import httpx
 
@@ -101,7 +101,7 @@ class Api:
         self.vpn = VpnApp(self, "vpn")
         self.wireless = WirelessApp(self, "wireless")
 
-    async def __aenter__(self) -> Api:
+    async def __aenter__(self) -> Self:
         return self
 
     async def __aexit__(
@@ -126,7 +126,7 @@ class Api:
         if not self.token:
             return {}
         scheme = "Bearer" if _is_v2_token(self.token) else "Token"
-        return {"Authorization": "{} {}".format(scheme, self.token)}
+        return {"Authorization": f"{scheme} {self.token}"}
 
     def _backoff(self, attempt: int, retry_after: str | None) -> float:
         """Delay in seconds before retry `attempt` (0-based)."""
@@ -211,22 +211,20 @@ class Api:
 
     async def version(self) -> str:
         """The NetBox API version string, read from response headers."""
-        resp = await self._client.get(
-            "{}/".format(self.base_url), headers=self._auth_headers()
-        )
+        resp = await self._client.get(f"{self.base_url}/", headers=self._auth_headers())
         if resp.is_success or resp.status_code == 403:
             return resp.headers.get("API-Version", "")
         raise RequestError(resp)
 
     async def status(self) -> dict[str, Any]:
         """The /api/status/ payload (NetBox version, plugins, workers...)."""
-        return await self._request("GET", "{}/status/".format(self.base_url))
+        return await self._request("GET", f"{self.base_url}/status/")
 
     async def openapi(self) -> dict[str, Any]:
         """The OpenAPI spec (NetBox 3.5+), cached after the first call."""
         if self._openapi is None:
             spec: dict[str, Any] = await self._request(
-                "GET", "{}/schema/".format(self.base_url)
+                "GET", f"{self.base_url}/schema/"
             )
             self._openapi = spec
         return self._openapi
@@ -240,7 +238,7 @@ class Api:
         """
         data = await self._request(
             "POST",
-            "{}/users/tokens/provision/".format(self.base_url),
+            f"{self.base_url}/users/tokens/provision/",
             json={"username": username, "password": password},
         )
         if data.get("version") == 2:

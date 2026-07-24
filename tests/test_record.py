@@ -12,7 +12,7 @@ async def test_nested_record_access(nb):
 async def test_missing_attr_on_brief_record_hints_full_details(nb):
     device = await nb.dcim.devices.get(1)
     with pytest.raises(AttributeError, match="full_details"):
-        device.site.time_zone
+        _ = device.site.time_zone
 
 
 async def test_full_details_loads_missing_fields(nb):
@@ -24,7 +24,7 @@ async def test_full_details_loads_missing_fields(nb):
 async def test_missing_attr_on_full_record_plain_error(nb):
     device = await nb.dcim.devices.get(1)
     with pytest.raises(AttributeError, match="has no attribute"):
-        device.not_a_field
+        _ = device.not_a_field
 
 
 async def test_save_sends_only_changed_fields(nb, fake):

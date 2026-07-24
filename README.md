@@ -31,6 +31,7 @@ uv add aiopynetbox   # or: pip install aiopynetbox
 import asyncio
 import aiopynetbox
 
+
 async def main():
     async with aiopynetbox.api("https://netbox.example.com", token="...") as nb:
         # single object
@@ -44,6 +45,7 @@ async def main():
         # diff-based save: only changed fields are PATCHed
         device.serial = "ABC123"
         await device.save()
+
 
 asyncio.run(main())
 ```
@@ -115,9 +117,9 @@ that isn't loaded raises `AttributeError` telling you to
 ```python
 async with aiopynetbox.api(url, token=token) as nb:
     # read
-    device = await nb.dcim.devices.get(123)               # by id (None if missing)
-    device = await nb.dcim.devices.get(name="sw-1")       # by filter (ValueError if >1)
-    total  = await nb.dcim.devices.count(site="main")
+    device = await nb.dcim.devices.get(123)  # by id (None if missing)
+    device = await nb.dcim.devices.get(name="sw-1")  # by filter (ValueError if >1)
+    total = await nb.dcim.devices.count(site="main")
     async for d in nb.dcim.devices.filter(status="active", tag=["prod", "core"]):
         ...
     async for d in nb.dcim.devices.all(limit=100, offset=200):  # single page
@@ -126,7 +128,7 @@ async with aiopynetbox.api(url, token=token) as nb:
     # write
     new = await nb.dcim.devices.create(name="sw-9", device_type=12, site=1, role=3)
     device.serial = "XYZ"
-    await device.save()                                   # PATCH {"serial": "XYZ"}
+    await device.save()  # PATCH {"serial": "XYZ"}
     await device.update({"serial": "XYZ", "comments": "..."})
     await device.delete()
 
@@ -136,11 +138,11 @@ async with aiopynetbox.api(url, token=token) as nb:
 
     # ipam allocation
     prefix = await nb.ipam.prefixes.get(prefix="10.0.0.0/24")
-    ip = await prefix.available_ips.create()              # next free IP
-    ips = await prefix.available_ips.create([{}, {}])     # next two
+    ip = await prefix.available_ips.create()  # next free IP
+    ips = await prefix.available_ips.create([{}, {}])  # next two
 
     # instance info
-    print(await nb.version())                             # "4.5"
+    print(await nb.version())  # "4.5"
     print(await nb.status())
 ```
 

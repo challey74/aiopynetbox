@@ -44,5 +44,5 @@ class PluginsApp:
     async def installed_plugins(self) -> list[dict[str, Any]]:
         """The plugins installed on the NetBox instance."""
         return await self._api._request(
-            "GET", "{}/plugins/installed-plugins/".format(self._api.base_url)
+            "GET", f"{self._api.base_url}/plugins/installed-plugins/"
         )

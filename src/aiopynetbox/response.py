@@ -79,10 +79,10 @@ class Record:
             raise AttributeError(k)
         if self.url and not self._has_details:
             raise AttributeError(
-                "{!r} is not loaded on this record. It may only be present on "
-                "the full object; 'await record.full_details()' then retry.".format(k)
+                f"{k!r} is not loaded on this record. It may only be present on "
+                "the full object; 'await record.full_details()' then retry."
             )
-        raise AttributeError("Record has no attribute {!r}".format(k))
+        raise AttributeError(f"Record has no attribute {k!r}")
 
     def _key(self) -> tuple[str, Any] | None:
         url = self.__dict__.get("url")

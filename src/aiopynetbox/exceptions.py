@@ -14,17 +14,13 @@ class RequestError(Exception):
         self.url = str(response.url)
         self.error = response.text
         if response.status_code == 404:
-            self.message = "The requested url: {} could not be found.".format(
-                response.url
-            )
+            self.message = f"The requested url: {response.url} could not be found."
         else:
             try:
                 detail = response.json()
             except ValueError:
                 detail = "(non-JSON response body)"
-            self.message = "The request failed with code {} {}: {}".format(
-                response.status_code, response.reason_phrase, detail
-            )
+            self.message = f"The request failed with code {response.status_code} {response.reason_phrase}: {detail}"
         super().__init__(self.message)
 
 
