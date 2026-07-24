@@ -26,6 +26,11 @@ an endpoint or behavior the fake doesn't model yet, extend the fake.
 
 New features and bug fixes should come with tests.
 
+`src/aiopynetbox/apps.py` is generated - don't edit it by hand. To
+refresh the endpoint hints (e.g. after a NetBox release), run
+`uv run python scripts/generate_endpoints.py` and commit the diff; a
+scheduled workflow also does this weekly against demo.netbox.dev.
+
 ## Design constraints
 
 This library deliberately differs from pynetbox: all I/O is explicit and

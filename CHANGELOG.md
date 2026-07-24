@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   failures for GETs only. Configurable via `Api(retries=)`, default 3.
 - `full_details()` revalidates repeat fetches with `If-None-Match`
   (NetBox 4.6+); a 304 skips re-download and re-parsing.
+- Typed endpoint hints: the app objects (`nb.dcim`, `nb.ipam`, ...) now
+  declare every core endpoint from the NetBox OpenAPI schema, so IDEs
+  autocomplete endpoint names. Static-analysis only; unknown endpoints
+  still resolve dynamically at runtime. Regenerated weekly from
+  demo.netbox.dev by a scheduled workflow.
 
 ### Fixed
 

@@ -9,7 +9,19 @@ from typing import Any
 
 import httpx
 
-from aiopynetbox.app import App, PluginsApp
+from aiopynetbox.app import PluginsApp
+from aiopynetbox.apps import (
+    CircuitsApp,
+    CoreApp,
+    DcimApp,
+    ExtrasApp,
+    IpamApp,
+    TenancyApp,
+    UsersApp,
+    VirtualizationApp,
+    VpnApp,
+    WirelessApp,
+)
 from aiopynetbox.exceptions import AllocationError, ContentError, RequestError
 from aiopynetbox.response import Record
 
@@ -76,17 +88,17 @@ class Api:
             else httpx.AsyncClient(timeout=timeout, follow_redirects=True)
         )
 
-        self.circuits = App(self, "circuits")
-        self.core = App(self, "core")
-        self.dcim = App(self, "dcim")
-        self.extras = App(self, "extras")
-        self.ipam = App(self, "ipam")
+        self.circuits = CircuitsApp(self, "circuits")
+        self.core = CoreApp(self, "core")
+        self.dcim = DcimApp(self, "dcim")
+        self.extras = ExtrasApp(self, "extras")
+        self.ipam = IpamApp(self, "ipam")
         self.plugins = PluginsApp(self)
-        self.tenancy = App(self, "tenancy")
-        self.users = App(self, "users")
-        self.virtualization = App(self, "virtualization")
-        self.vpn = App(self, "vpn")
-        self.wireless = App(self, "wireless")
+        self.tenancy = TenancyApp(self, "tenancy")
+        self.users = UsersApp(self, "users")
+        self.virtualization = VirtualizationApp(self, "virtualization")
+        self.vpn = VpnApp(self, "vpn")
+        self.wireless = WirelessApp(self, "wireless")
 
     async def __aenter__(self) -> Api:
         return self
