@@ -5,83 +5,56 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-
-- Cursor-based pagination for NetBox 4.6+: `aiopynetbox.api(..., pagination="cursor")`
-  pages list views with the `start` cursor (constant-time per page,
-  sequential). Offset mode with concurrent page fan-out remains the default.
-- Optimistic locking (NetBox 4.6+): records fetched from a detail endpoint
-  store the response `ETag`; `save()` sends `If-Match`, so a concurrent
-  modification fails with a 412 `RequestError` instead of silently
-  overwriting it.
-- `AllocationError`, raised when NetBox returns 409 Conflict for an
-  allocation create (e.g. available-ips with no room left).
-- `Api.openapi()`: the OpenAPI spec, cached after the first call.
-- `Api.create_token(username, password)`: token provisioning; adopts the
-  new token (including the v2 `nbt_<key>.<token>` form) for subsequent
-  requests.
-- `data_source.sync.create()` to trigger a data source sync
-  (core/data-sources).
-- `App.endpoint(name)` for endpoints whose slug contains literal
-  underscores (attribute access converts `_` to `-`).
-- `register_model(app, endpoint, record_class)` to map plugin or custom
-  endpoints to Record subclasses.
-
-- Automatic retries with exponential backoff and jitter: 429 for any
-  method (honoring `Retry-After`), transient 502/503/504 and connection
-  failures for GETs only. Configurable via `Api(retries=)`, default 3.
-- `full_details()` revalidates repeat fetches with `If-None-Match`
-  (NetBox 4.6+); a 304 skips re-download and re-parsing.
-- Typed endpoint hints: the app objects (`nb.dcim`, `nb.ipam`, ...) now
-  declare every core endpoint from the NetBox OpenAPI schema, so IDEs
-  autocomplete endpoint names. Static-analysis only; unknown endpoints
-  still resolve dynamically at runtime. Regenerated weekly from
-  demo.netbox.dev by a scheduled workflow.
-- Kwargs autocomplete: `filter()`, `get()`, `count()`, and `create()`
-  complete filter-param and writable-field names per endpoint, via a
-  generated stub (`hints_generated.pyi`). Hints are name-only (values stay `Any`)
-  and every method keeps a `**kwargs: Any` fallback overload, so
-  custom-field filters (`cf_*`), lookup expressions (`name__isw=`), and
-  plugin params remain legal. `nb.ipam.prefixes.get()` and friends now
-  also return their model subclass types.
-
-- A runnable FastAPI example (`examples/fastapi_app.py`) showing the
-  app-state / lifespan usage pattern.
-
-### Changed
-
-- `aclose()` (and the async context manager) now closes only clients
-  the Api created; a client passed via `client=` stays open, per httpx
-  convention, so one client can back several Api instances.
-
-### Fixed
-
-- `save()` and `delete()` on a Record without a `url` (e.g. a choice
-  field) now raise a clear ValueError instead of crashing inside httpx.
-
-## [0.1.0] - 2026-07-23
+## [0.1.0] - 2026-07-24
 
 Initial release.
 
 ### Added
 
 - Fully async `Api` client on httpx, usable as an async context manager;
-  `follow_redirects` enabled by default.
-- NetBox v1 (`Token`) and v2 (`nbt_` / `Bearer`) token support.
+  `follow_redirects` enabled by default. A client passed via `client=`
+  stays open on close (httpx convention); the Api closes only clients
+  it creates.
+- NetBox v1 (`Token`) and v2 (`nbt_` / `Bearer`) token support, plus
+  `Api.create_token()` provisioning that adopts the new token.
 - App/endpoint attribute traversal (`nb.dcim.devices`), including
-  `nb.plugins.<plugin>.<endpoint>` and `nb.plugins.installed_plugins()`.
+  `nb.plugins.<plugin>.<endpoint>`, `nb.plugins.installed_plugins()`,
+  and `App.endpoint(name)` for slugs with literal underscores.
 - `get()` / `filter()` / `all()` / `count()` / `create()` on endpoints;
   result sets are lazy async iterators with concurrent page fetching
   bounded by `max_concurrency`.
+- Cursor-based pagination for NetBox 4.6+ via
+  `aiopynetbox.api(..., pagination="cursor")`: constant-time pages
+  using the `start` cursor (sequential). Offset mode with concurrent
+  fan-out remains the default.
 - Diff-based `Record.save()` (PATCHes only changed fields, with
   custom_fields merge semantics), `update()`, `delete()`, and explicit
   `full_details()` for brief nested records.
+- Optimistic locking (NetBox 4.6+): detail fetches store the response
+  `ETag`; `save()` sends `If-Match` (412 on concurrent modification)
+  and repeat `full_details()` calls revalidate with `If-None-Match`
+  (304 skips re-download and re-parsing).
+- Automatic retries with exponential backoff and jitter: 429 for any
+  method (honoring `Retry-After`), transient 502/503/504 and
+  connection failures for GETs only. Configurable via `Api(retries=)`,
+  default 3.
 - Bulk operations: `RecordSet.update(**fields)` / `RecordSet.delete()`
   and `Endpoint.update(list)` / `Endpoint.delete(list)`.
-- `Endpoint.choices()` from OPTIONS metadata.
-- IPAM allocation helpers: `prefix.available_ips` / `available_prefixes`,
-  `ip_range.available_ips`, `vlan_group.available_vlans`.
+- `Endpoint.choices()` from OPTIONS metadata and `Api.openapi()` with
+  in-memory caching.
+- IPAM allocation helpers: `prefix.available_ips` /
+  `available_prefixes`, `ip_range.available_ips`,
+  `vlan_group.available_vlans`; `AllocationError` raised on 409
+  conflicts. `data_source.sync.create()` triggers a data source sync.
+- `register_model(app, endpoint, record_class)` to map plugin or
+  custom endpoints to Record subclasses.
 - Record equality/hashing by NetBox identity (detail url + id).
-- Full type hints and a `py.typed` marker.
+- Full type hints with a `py.typed` marker, plus generated hints so
+  IDEs autocomplete endpoint names and per-endpoint kwargs for
+  `filter()` / `get()` / `count()` / `create()`. Hints never restrict
+  runtime behavior; they regenerate weekly from the NetBox OpenAPI
+  schema.
+- A runnable FastAPI example (`examples/fastapi_app.py`) showing the
+  app-state / lifespan usage pattern.
+
+[0.1.0]: https://github.com/challey74/aiopynetbox/releases/tag/v0.1.0
