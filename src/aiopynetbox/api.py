@@ -44,20 +44,32 @@ class Api:
         async with aiopynetbox.api("https://netbox", token="...") as nb:
             device = await nb.dcim.devices.get(name="sw-1")
 
-    Pass `client` to supply a custom httpx.AsyncClient (SSL config, mock
-    transports in tests, ...).
+    Every request-making method raises RequestError on a non-success
+    response (AllocationError instead for POST 409 conflicts) and
+    ContentError when a successful response isn't JSON; transient
+    failures are retried per `retries` before surfacing. Per-method
+    Raises sections below list only conditions beyond these.
 
-    `pagination` selects how result sets page through list views:
-    "offset" (default) fetches pages concurrently once the first page
-    reveals the count; "cursor" (NetBox 4.6+) pages with the `start`
-    parameter in constant time per page, but sequentially, since each
-    page's cursor comes from the previous response.
-
-    `retries` bounds automatic retries with exponential backoff and
-    jitter: 429 responses are retried for any method (honoring
-    Retry-After); transient 502/503/504 and connection failures are
-    retried for GETs only, since an ambiguous write may have been
-    processed. `retries=0` disables.
+    Args:
+        url: Base NetBox URL without the /api suffix (it is appended).
+        token: API token. v2 tokens (nbt_..., NetBox 4.5+) use Bearer
+            auth automatically; anything else uses the classic Token
+            scheme.
+        max_concurrency: Concurrent page fetches per result-set
+            iteration under offset pagination.
+        pagination: "offset" (default) fetches pages concurrently once
+            the first page reveals the count; "cursor" (NetBox 4.6+)
+            pages with the start parameter in constant time per page,
+            but sequentially, since each cursor comes from the
+            previous response.
+        retries: Bound on automatic retries with exponential backoff
+            and jitter. 429 is retried for any method (honoring
+            Retry-After); transient 502/503/504 and connection
+            failures retry for GETs only, since an ambiguous write may
+            have been processed. 0 disables.
+        client: Custom httpx.AsyncClient (SSL config, proxies, mock
+            transports). A supplied client is yours to close; the Api
+            closes only clients it creates itself.
     """
 
     def __init__(
@@ -210,7 +222,10 @@ class Api:
         return self._decode(resp)
 
     async def version(self) -> str:
-        """The NetBox API version string, read from response headers."""
+        """The NetBox API version string, read from response headers.
+
+        Works with restricted tokens: a 403 still carries the header.
+        """
         resp = await self._client.get(f"{self.base_url}/", headers=self._auth_headers())
         if resp.is_success or resp.status_code == 403:
             return resp.headers.get("API-Version", "")
@@ -235,6 +250,9 @@ class Api:
 
         For v2 tokens (NetBox 4.5+) `self.token` becomes the full
         `nbt_<key>.<token>` auth value, which differs from `token.key`.
+
+        Raises:
+            RequestError: If provisioning fails (e.g. bad credentials).
         """
         data = await self._request(
             "POST",

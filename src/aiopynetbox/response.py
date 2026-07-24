@@ -160,6 +160,10 @@ class Record:
         A repeat call revalidates with If-None-Match (NetBox 4.6+); a 304
         means the object is unchanged on the server and nothing is
         re-parsed, so local attribute changes survive the refresh.
+
+        Returns:
+            True once details are loaded (or confirmed current); False
+            if the record has no detail url to fetch.
         """
         if not self.url:
             return False
@@ -175,12 +179,19 @@ class Record:
         return True
 
     async def save(self) -> bool:
-        """PATCH changed fields to NetBox. Returns True if anything was sent.
+        """PATCH changed fields to NetBox.
 
         Records fetched from a detail endpoint carry the response's ETag
-        (NetBox 4.6+); save() then sends If-Match, so a concurrent
-        modification fails with RequestError 412 instead of silently
-        overwriting it.
+        (NetBox 4.6+) and send it as If-Match, so a concurrent
+        modification fails instead of being silently overwritten.
+
+        Returns:
+            True if a PATCH was sent; False when nothing changed.
+
+        Raises:
+            ValueError: If the record has no detail url.
+            RequestError: With status 412 if the object changed on the
+                server since this record was fetched.
         """
         updates = self.updates()
         if not updates:
@@ -198,12 +209,17 @@ class Record:
         return True
 
     async def update(self, data: dict[str, Any]) -> bool:
-        """Set fields from a dict and save()."""
+        """Set fields from a dict and save(); see save() for semantics."""
         for k, v in data.items():
             setattr(self, k, v)
         return await self.save()
 
     async def delete(self) -> bool:
+        """DELETE the object in NetBox.
+
+        Raises:
+            ValueError: If the record has no detail url.
+        """
         url = self.url
         if url is None:
             raise ValueError("Record has no url and cannot be deleted")
@@ -308,7 +324,14 @@ class RecordSet:
         return data["count"]
 
     async def update(self, **kwargs: Any) -> list[Record]:
-        """Bulk PATCH the same field values onto every record in the set."""
+        """Bulk PATCH the same field values onto every record in the set.
+
+        Iterates the query to collect ids, then sends one list-body
+        PATCH.
+
+        Returns:
+            The updated Records; [] for an empty set (no request sent).
+        """
         ids = [r.id async for r in self]
         if not ids:
             return []
@@ -319,7 +342,11 @@ class RecordSet:
         return [self.endpoint.record_class(i, api, full=True) for i in data]
 
     async def delete(self) -> bool:
-        """Bulk DELETE every record in the set. False if the set is empty."""
+        """Bulk DELETE every record in the set.
+
+        Returns:
+            True on deletion; False for an empty set (no request sent).
+        """
         ids = [r.id async for r in self]
         if not ids:
             return False

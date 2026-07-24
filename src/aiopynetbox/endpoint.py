@@ -26,8 +26,16 @@ class Endpoint:
     async def get(self, id: int | str | None = None, /, **kwargs: Any) -> Record | None:
         """Get a single Record by id or by filter kwargs.
 
-        Returns None if nothing matches. Raises ValueError if kwargs match
-        more than one object.
+        Args:
+            id: Primary key; fetches the detail URL directly.
+            **kwargs: Filter parameters (instead of an id); must match
+                at most one object.
+
+        Returns:
+            The Record, or None if nothing matches.
+
+        Raises:
+            ValueError: If kwargs match more than one object.
         """
         if id is not None:
             try:
@@ -55,13 +63,31 @@ class Endpoint:
         return first
 
     def filter(self, **kwargs: Any) -> RecordSet:
-        """Query the endpoint with filters; returns a lazy RecordSet."""
+        """Query the endpoint with filters; returns a lazy RecordSet.
+
+        Args:
+            **kwargs: NetBox filter params. Lookup expressions work as
+                keywords (name__isw="sw-") and list values OR-match
+                (status=["active", "staged"]).
+
+        Raises:
+            ValueError: If called with no kwargs; use all() instead.
+        """
         if not kwargs:
             raise ValueError("filter must be passed kwargs. Use all() instead.")
         return RecordSet(self, kwargs)
 
     def all(self, limit: int = 0, offset: int | None = None) -> RecordSet:
-        """Return a RecordSet over every object on the endpoint."""
+        """Return a RecordSet over every object on the endpoint.
+
+        Args:
+            limit: Page size for the query; 0 uses the server default.
+            offset: Fetch only the single page starting here (requires
+                limit) instead of iterating everything.
+
+        Raises:
+            ValueError: If offset is given without a limit.
+        """
         if offset is not None and not limit:
             raise ValueError("offset requires a positive limit value")
         return RecordSet(self, limit=limit, offset=offset)
@@ -73,7 +99,18 @@ class Endpoint:
     async def create(
         self, *args: dict[str, Any] | list[dict[str, Any]], **kwargs: Any
     ) -> Record | list[Record]:
-        """POST a new object (kwargs or a single dict) or a list of dicts."""
+        """POST new objects.
+
+        Args:
+            *args: A single dict, or a list of dicts for bulk create.
+            **kwargs: Fields for a single object (the usual form).
+
+        Returns:
+            A Record, or a list of Records for bulk input.
+
+        Raises:
+            AllocationError: On 409 conflicts.
+        """
         data = args[0] if args else kwargs
         resp = await self.api._request("POST", self.url, json=data)
         if isinstance(resp, list):
@@ -95,8 +132,10 @@ class Endpoint:
     async def choices(self) -> dict[str, list[dict[str, Any]]]:
         """Choices for the endpoint's choice fields, from an OPTIONS request.
 
-        NetBox only includes writable-field metadata for actions the token
-        may perform, so a read-only token raises ValueError here.
+        Raises:
+            ValueError: If the response carries no writable-action
+                metadata, which is what NetBox returns for tokens
+                without write permission on the endpoint.
         """
         if self._choices is not None:
             return self._choices

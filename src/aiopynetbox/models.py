@@ -32,8 +32,17 @@ class DetailEndpoint:
     ) -> Record | list[Record]:
         """POST to the detail endpoint (e.g. allocate next available IPs).
 
-        Pass a dict for one object, a list of dicts for several; NetBox
-        assigns the actual values (address, prefix, vid...).
+        Args:
+            data: A dict for one object, a list of dicts for several,
+                or omitted to take the next single allocation. NetBox
+                assigns the actual values (address, prefix, vid...).
+
+        Returns:
+            A Record, or a list of Records for list input.
+
+        Raises:
+            AllocationError: If the request cannot be fulfilled
+                (e.g. not enough free IPs in the prefix).
         """
         resp = await self.api._request("POST", self.url, json=data or {})
         if isinstance(resp, list):
