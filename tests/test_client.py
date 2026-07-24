@@ -123,11 +123,19 @@ async def test_content_error_on_non_json():
             await nb.dcim.devices.get(1)
 
 
-async def test_context_manager_closes_client(fake):
-    nb = make_api(fake)
+async def test_context_manager_closes_owned_client():
+    nb = aiopynetbox.api(BASE)
     async with nb:
         pass
     assert nb._client.is_closed
+
+
+async def test_context_manager_leaves_supplied_client_open(fake):
+    client = httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))
+    async with aiopynetbox.api(BASE, token="abc123", client=client) as nb:
+        await nb.dcim.devices.get(1)
+    assert not client.is_closed
+    await client.aclose()
 
 
 async def test_endpoint_url_dashes(nb):

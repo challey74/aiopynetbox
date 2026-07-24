@@ -55,6 +55,6 @@ Not implemented yet (deliberately, add only when needed): napalm helpers (NetBox
 
 ## Conventions
 
-- httpx `AsyncClient` is the only HTTP transport; the client should be usable as an async context manager (`async with aiopynetbox.api(...) as nb:`) so the connection pool is closed deterministically.
+- httpx `AsyncClient` is the only HTTP transport; the client should be usable as an async context manager (`async with aiopynetbox.api(...) as nb:`) so the connection pool is closed deterministically. The context manager is one-shot; `aclose()` closes only clients the Api created - a `client=` passed in is the caller's to close (httpx convention).
 - No sync wrapper/facade unless explicitly requested.
 - A local reference clone of pynetbox may exist in the session scratchpad, not in this repo - never vendor pynetbox code without noting its Apache 2.0 license.
