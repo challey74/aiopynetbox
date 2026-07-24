@@ -39,6 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   autocomplete endpoint names. Static-analysis only; unknown endpoints
   still resolve dynamically at runtime. Regenerated weekly from
   demo.netbox.dev by a scheduled workflow.
+- Kwargs autocomplete: `filter()`, `get()`, `count()`, and `create()`
+  complete filter-param and writable-field names per endpoint, via a
+  generated stub (`hints.pyi`). Hints are name-only (values stay `Any`)
+  and every method keeps a `**kwargs: Any` fallback overload, so
+  custom-field filters (`cf_*`), lookup expressions (`name__isw=`), and
+  plugin params remain legal. `nb.ipam.prefixes.get()` and friends now
+  also return their model subclass types.
 
 ### Fixed
 

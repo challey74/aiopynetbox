@@ -104,7 +104,11 @@ that isn't loaded raises `AttributeError` telling you to
   BgpSession)` maps plugin endpoints to your own Record subclasses;
   `app.endpoint("literal_name")` reaches endpoint slugs that contain
   real underscores.
-- **Typed**: full type hints and a `py.typed` marker.
+- **Typed**: full type hints and a `py.typed` marker, plus generated
+  hints so IDEs autocomplete endpoint names (`nb.dcim.devices`) and
+  per-endpoint kwargs (`filter(name=...)`, `create(device_type=...)`).
+  Hints never restrict anything at runtime: unknown endpoints, lookup
+  expressions, and custom-field filters keep working.
 
 ## API tour
 
