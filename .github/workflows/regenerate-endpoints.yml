@@ -19,7 +19,7 @@ jobs:
       - run: uv run ruff format src/aiopynetbox/apps_generated.py src/aiopynetbox/hints_generated.pyi
       - run: uv run pyright
       - run: uv run pytest
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore: regenerate endpoint hints from demo.netbox.dev"
           title: "chore: regenerate endpoint hints"
