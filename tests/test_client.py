@@ -1,4 +1,4 @@
-import httpx
+import httpx2
 import pytest
 from conftest import BASE, FakeNetbox, make_api, make_device
 
@@ -115,9 +115,9 @@ async def test_request_error_on_500(nb):
 
 async def test_content_error_on_non_json():
     def handler(request):
-        return httpx.Response(200, text="<html>not netbox</html>")
+        return httpx2.Response(200, text="<html>not netbox</html>")
 
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    client = httpx2.AsyncClient(transport=httpx2.MockTransport(handler))
     async with aiopynetbox.api(BASE, client=client) as nb:
         with pytest.raises(aiopynetbox.ContentError):
             await nb.dcim.devices.get(1)
@@ -131,7 +131,7 @@ async def test_context_manager_closes_owned_client():
 
 
 async def test_context_manager_leaves_supplied_client_open(fake):
-    client = httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))
+    client = httpx2.AsyncClient(transport=httpx2.MockTransport(fake.handler))
     async with aiopynetbox.api(BASE, token="abc123", client=client) as nb:
         await nb.dcim.devices.get(1)
     assert not client.is_closed

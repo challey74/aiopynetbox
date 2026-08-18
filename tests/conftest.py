@@ -1,7 +1,7 @@
 import json
 import re
 
-import httpx
+import httpx2
 import pytest
 
 import aiopynetbox
@@ -73,7 +73,7 @@ DEVICE_OPTIONS = {
 
 
 class FakeNetbox:
-    """Minimal in-memory NetBox served through httpx.MockTransport."""
+    """Minimal in-memory NetBox served through httpx2.MockTransport."""
 
     def __init__(self, devices=None, page_size=50):
         self.devices = {d["id"]: d for d in (devices or [])}
@@ -83,7 +83,7 @@ class FakeNetbox:
         self.next_id = max(self.devices, default=0) + 1
         # Failure injection for retry tests: each entry is consumed by one
         # request before normal routing. An int is an HTTP status to return;
-        # "transport" raises httpx.ConnectError.
+        # "transport" raises httpx2.ConnectError.
         self.fail_next = []
 
     def handler(self, request):
@@ -91,26 +91,26 @@ class FakeNetbox:
         if self.fail_next:
             failure = self.fail_next.pop(0)
             if failure == "transport":
-                raise httpx.ConnectError("injected failure")
-            return httpx.Response(
+                raise httpx2.ConnectError("injected failure")
+            return httpx2.Response(
                 failure, json={"detail": "injected"}, headers={"Retry-After": "0"}
             )
         path = request.url.path
         params = request.url.params
 
         if path == "/api/" and request.method == "GET":
-            return httpx.Response(200, json={}, headers={"API-Version": "4.5"})
+            return httpx2.Response(200, json={}, headers={"API-Version": "4.5"})
         if path == "/api/status/":
-            return httpx.Response(200, json={"netbox-version": "4.5.0"})
+            return httpx2.Response(200, json={"netbox-version": "4.5.0"})
         if path == "/api/schema/":
-            return httpx.Response(200, json={"openapi": "3.0.3", "paths": {}})
+            return httpx2.Response(200, json={"openapi": "3.0.3", "paths": {}})
         if path == "/api/users/tokens/provision/" and request.method == "POST":
             body = json.loads(request.content)
             if body["username"] == "v1user":
-                return httpx.Response(
+                return httpx2.Response(
                     201, json={"id": 2, "display": "t", "key": "plainv1token"}
                 )
-            return httpx.Response(
+            return httpx2.Response(
                 201,
                 json={
                     "id": 1,
@@ -121,20 +121,22 @@ class FakeNetbox:
                 },
             )
         if path == "/api/plugins/installed-plugins/":
-            return httpx.Response(200, json=[{"name": "test_plugin", "version": "1.0"}])
+            return httpx2.Response(
+                200, json=[{"name": "test_plugin", "version": "1.0"}]
+            )
 
         if path == "/api/core/data-sources/1/" and request.method == "GET":
-            return httpx.Response(200, json=DATA_SOURCE_FULL)
+            return httpx2.Response(200, json=DATA_SOURCE_FULL)
         if path == "/api/core/data-sources/1/sync/" and request.method == "POST":
             synced = dict(DATA_SOURCE_FULL)
             synced["status"] = {"value": "syncing", "label": "Syncing"}
-            return httpx.Response(200, json=synced)
+            return httpx2.Response(200, json=synced)
 
         if path == "/api/ipam/prefixes/1/" and request.method == "GET":
-            return httpx.Response(200, json=PREFIX_FULL)
+            return httpx2.Response(200, json=PREFIX_FULL)
         if path == "/api/ipam/prefixes/1/available-ips/":
             if request.method == "GET":
-                return httpx.Response(
+                return httpx2.Response(
                     200,
                     json=[
                         {"family": 4, "address": f"10.0.0.{i}/29", "vrf": None}
@@ -144,7 +146,7 @@ class FakeNetbox:
             body = json.loads(request.content)
             items = body if isinstance(body, list) else [body]
             if len(items) > 3:
-                return httpx.Response(
+                return httpx2.Response(
                     409, json={"detail": "Insufficient available IPs."}
                 )
             created = []
@@ -157,36 +159,36 @@ class FakeNetbox:
                 ip.update(item)
                 created.append(ip)
             payload = created if isinstance(body, list) else created[0]
-            return httpx.Response(201, json=payload)
+            return httpx2.Response(201, json=payload)
 
         if m := re.fullmatch(r"/api/dcim/sites/(\d+)/", path):
             site = self.sites.get(int(m.group(1)))
             if not site:
-                return httpx.Response(404, json={"detail": "Not found."})
-            return httpx.Response(200, json=site)
+                return httpx2.Response(404, json={"detail": "Not found."})
+            return httpx2.Response(200, json=site)
 
         if m := re.fullmatch(r"/api/dcim/devices/(\d+)/", path):
             device = self.devices.get(int(m.group(1)))
             if not device:
-                return httpx.Response(404, json={"detail": "Not found."})
+                return httpx2.Response(404, json={"detail": "Not found."})
             etag = f'"etag-{device["id"]}"'
             if request.method == "PATCH":
                 if request.headers.get("If-Match", etag) != etag:
-                    return httpx.Response(412, json={"detail": "Precondition failed."})
+                    return httpx2.Response(412, json={"detail": "Precondition failed."})
                 device.update(json.loads(request.content))
-                return httpx.Response(
+                return httpx2.Response(
                     200, json=device, headers={"ETag": f'"etag-{device["id"]}-v2"'}
                 )
             if request.method == "DELETE":
                 del self.devices[device["id"]]
-                return httpx.Response(204)
+                return httpx2.Response(204)
             if request.headers.get("If-None-Match") == etag:
-                return httpx.Response(304, headers={"ETag": etag})
-            return httpx.Response(200, json=device, headers={"ETag": etag})
+                return httpx2.Response(304, headers={"ETag": etag})
+            return httpx2.Response(200, json=device, headers={"ETag": etag})
 
         if path == "/api/dcim/devices/":
             if request.method == "OPTIONS":
-                return httpx.Response(200, json=DEVICE_OPTIONS)
+                return httpx2.Response(200, json=DEVICE_OPTIONS)
             if request.method == "PATCH":
                 body = json.loads(request.content)
                 updated = []
@@ -194,12 +196,12 @@ class FakeNetbox:
                     device = self.devices[item["id"]]
                     device.update({k: v for k, v in item.items() if k != "id"})
                     updated.append(device)
-                return httpx.Response(200, json=updated)
+                return httpx2.Response(200, json=updated)
             if request.method == "DELETE":
                 body = json.loads(request.content)
                 for item in body:
                     del self.devices[item["id"]]
-                return httpx.Response(204)
+                return httpx2.Response(204)
             if request.method == "POST":
                 body = json.loads(request.content)
                 created = []
@@ -210,7 +212,7 @@ class FakeNetbox:
                     self.next_id += 1
                     created.append(device)
                 payload = created if isinstance(body, list) else created[0]
-                return httpx.Response(201, json=payload)
+                return httpx2.Response(201, json=payload)
             matches = [
                 d
                 for d in self.devices.values()
@@ -234,7 +236,7 @@ class FakeNetbox:
                     if len(remaining) > limit
                     else None
                 )
-                return httpx.Response(
+                return httpx2.Response(
                     200,
                     json={
                         "count": None,
@@ -246,7 +248,7 @@ class FakeNetbox:
             offset = int(params.get("offset", 0))
             page = matches[offset : offset + limit]
             has_next = offset + limit < len(matches)
-            return httpx.Response(
+            return httpx2.Response(
                 200,
                 json={
                     "count": len(matches),
@@ -258,7 +260,7 @@ class FakeNetbox:
                 },
             )
 
-        return httpx.Response(500, json={"error": f"unhandled path {path}"})
+        return httpx2.Response(500, json={"error": f"unhandled path {path}"})
 
 
 @pytest.fixture
@@ -275,7 +277,7 @@ def fake():
 
 
 def make_api(fake, token="abc123", **kwargs):
-    client = httpx.AsyncClient(transport=httpx.MockTransport(fake.handler))
+    client = httpx2.AsyncClient(transport=httpx2.MockTransport(fake.handler))
     return aiopynetbox.api(BASE, token=token, client=client, **kwargs)
 
 

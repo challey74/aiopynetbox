@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-08-17
+
+### Changed
+
+- Switched the HTTP transport from httpx to
+  [httpx2](https://github.com/pydantic/httpx2), the Pydantic-maintained
+  fork (httpx development has stalled). The API is unchanged, but a
+  custom client passed via `client=` must now be an `httpx2.AsyncClient`
+  (`pip install httpx2`, `import httpx2`).
+
 ## [0.1.0] - 2026-07-24
 
 Initial release.
@@ -57,4 +67,5 @@ Initial release.
 - A runnable FastAPI example (`examples/fastapi_app.py`) showing the
   app-state / lifespan usage pattern.
 
+[0.2.0]: https://github.com/challey74/aiopynetbox/releases/tag/v0.2.0
 [0.1.0]: https://github.com/challey74/aiopynetbox/releases/tag/v0.1.0

@@ -1,4 +1,4 @@
-import httpx
+import httpx2
 import pytest
 from conftest import make_api
 
@@ -50,7 +50,7 @@ async def test_transport_error_retried_for_get(nb, fake):
 
 async def test_transport_error_not_retried_for_post(nb, fake):
     fake.fail_next = ["transport"]
-    with pytest.raises(httpx.ConnectError):
+    with pytest.raises(httpx2.ConnectError):
         await nb.dcim.devices.create(name="sw-new")
     assert len(fake.requests) == 1
 
