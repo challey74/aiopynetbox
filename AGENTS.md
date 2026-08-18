@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-`aiopynetbox` - a fully async NetBox API client, built from scratch with httpx. It is inspired by [pynetbox](https://github.com/netbox-community/pynetbox) (the popular sync client) but is **not a port**: pynetbox's core ergonomics depend on sync-only Python protocols that cannot be awaited, so the API surface here is deliberately different (see Design constraints below).
+`aiopynetbox` - a fully async NetBox API client, built from scratch with httpx2 (the Pydantic-maintained fork of httpx). It is inspired by [pynetbox](https://github.com/netbox-community/pynetbox) (the popular sync client) but is **not a port**: pynetbox's core ergonomics depend on sync-only Python protocols that cannot be awaited, so the API surface here is deliberately different (see Design constraints below).
 
 Package layout: `src/aiopynetbox/`, tests in `tests/`. Managed with `uv`.
 
@@ -31,7 +31,7 @@ pynetbox ideas worth keeping (they're pure Python, no I/O): app/endpoint attribu
 
 ## Architecture
 
-All HTTP funnels through `Api._request_response()` ([api.py](src/aiopynetbox/api.py)) - auth headers (v1 `Token`/v2 `nbt_` `Bearer`) and error raising (POST 409 -> `AllocationError`, everything else non-success -> `RequestError`) live there and nowhere else, as does the retry loop (429 retried for any method honoring Retry-After; 502/503/504 and httpx.TransportError retried for GET only, since ambiguous writes may have been processed; `Api(retries=)` bounds attempts, `_backoff()` does capped exponential backoff with jitter); `Api._request()` adds JSON decoding (`_decode` -> `ContentError`). Detail-path callers (`Endpoint.get(id)`, `full_details()`, `save()`) use `_request_response` directly to capture the `ETag` header: records store it as `_etag` and `save()` sends `If-Match` (NetBox 4.6+ optimistic locking; stale ETag -> 412 `RequestError`); repeat `full_details()` calls send `If-None-Match` and a 304 (allowed through `_request_response` only when that header was sent) keeps current data without re-parsing). `App.__getattr__` ([app.py](src/aiopynetbox/app.py)) turns any attribute into an `Endpoint` ([endpoint.py](src/aiopynetbox/endpoint.py)), which builds URLs (`_`->`-`) and returns `Record`/`RecordSet` ([response.py](src/aiopynetbox/response.py)). `PluginsApp` (also app.py) routes `nb.plugins.<plugin>` into `/api/plugins/<plugin>/`.
+All HTTP funnels through `Api._request_response()` ([api.py](src/aiopynetbox/api.py)) - auth headers (v1 `Token`/v2 `nbt_` `Bearer`) and error raising (POST 409 -> `AllocationError`, everything else non-success -> `RequestError`) live there and nowhere else, as does the retry loop (429 retried for any method honoring Retry-After; 502/503/504 and httpx2.TransportError retried for GET only, since ambiguous writes may have been processed; `Api(retries=)` bounds attempts, `_backoff()` does capped exponential backoff with jitter); `Api._request()` adds JSON decoding (`_decode` -> `ContentError`). Detail-path callers (`Endpoint.get(id)`, `full_details()`, `save()`) use `_request_response` directly to capture the `ETag` header: records store it as `_etag` and `save()` sends `If-Match` (NetBox 4.6+ optimistic locking; stale ETag -> 412 `RequestError`); repeat `full_details()` calls send `If-None-Match` and a 304 (allowed through `_request_response` only when that header was sent) keeps current data without re-parsing). `App.__getattr__` ([app.py](src/aiopynetbox/app.py)) turns any attribute into an `Endpoint` ([endpoint.py](src/aiopynetbox/endpoint.py)), which builds URLs (`_`->`-`) and returns `Record`/`RecordSet` ([response.py](src/aiopynetbox/response.py)). `PluginsApp` (also app.py) routes `nb.plugins.<plugin>` into `/api/plugins/<plugin>/`.
 
 `Endpoint.__init__` resolves its Record subclass from `ENDPOINT_MODELS` in [models.py](src/aiopynetbox/models.py) (`"<app>/<endpoint>"` keys, e.g. `ipam/prefixes` -> `Prefixes` with `available_ips`/`available_prefixes` properties returning a `DetailEndpoint`; `core/data-sources` -> `DataSources` with a `sync` trigger). `register_model()` is the public way to add entries (plugin endpoints use the `"plugins/<plugin>"` app key). `DetailEndpoint.list()` reuses `RecordSet` - its plain-list branch handles non-paginated detail routes. `App.endpoint(name)` bypasses the `_` -> `-` slug conversion for literal-underscore endpoints. Import order matters: api -> app -> endpoint -> models -> response; response only TYPE_CHECKING-imports the others.
 
@@ -49,12 +49,12 @@ Key mechanics in `response.py`:
 
 The package is fully type-annotated (`from __future__ import annotations` everywhere) and ships `py.typed`. `__version__` comes from package metadata via `importlib.metadata`.
 
-Tests run entirely against `FakeNetbox` in [tests/conftest.py](tests/conftest.py) - an in-memory NetBox behind `httpx.MockTransport` (no network, no mocking library). Extend it when adding endpoints/behaviors.
+Tests run entirely against `FakeNetbox` in [tests/conftest.py](tests/conftest.py) - an in-memory NetBox behind `httpx2.MockTransport` (no network, no mocking library). Extend it when adding endpoints/behaviors.
 
 Not implemented yet (deliberately, add only when needed): napalm helpers (NetBox dropped built-in napalm in 3.5), cable trace helpers, file uploads (multipart), OpenAPI filter validation.
 
 ## Conventions
 
-- httpx `AsyncClient` is the only HTTP transport; the client should be usable as an async context manager (`async with aiopynetbox.api(...) as nb:`) so the connection pool is closed deterministically. The context manager is one-shot; `aclose()` closes only clients the Api created - a `client=` passed in is the caller's to close (httpx convention).
+- httpx2 `AsyncClient` is the only HTTP transport; the client should be usable as an async context manager (`async with aiopynetbox.api(...) as nb:`) so the connection pool is closed deterministically. The context manager is one-shot; `aclose()` closes only clients the Api created - a `client=` passed in is the caller's to close (httpx2 convention).
 - No sync wrapper/facade unless explicitly requested.
 - A local reference clone of pynetbox may exist in the session scratchpad, not in this repo - never vendor pynetbox code without noting its Apache 2.0 license.

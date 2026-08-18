@@ -5,7 +5,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/aiopynetbox)](https://pypi.org/project/aiopynetbox/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-Fully async NetBox API client for Python, built on [httpx](https://www.python-httpx.org/).
+Fully async NetBox API client for Python, built on [httpx2](https://github.com/pydantic/httpx2).
 
 Inspired by [pynetbox](https://github.com/netbox-community/pynetbox), redesigned
 for asyncio. This is not a port: pynetbox's core ergonomics (lazy attribute
@@ -70,7 +70,7 @@ that isn't loaded raises `AttributeError` telling you to
 
 ## Features
 
-- **Explicit async everywhere**: `httpx.AsyncClient` under the hood, used as
+- **Explicit async everywhere**: `httpx2.AsyncClient` under the hood, used as
   an async context manager so the connection pool closes deterministically.
 - **Concurrent pagination**: after the first page reveals the count, the
   remaining pages are fetched in parallel (bounded by `max_concurrency`,
@@ -162,18 +162,18 @@ async def lifespan(app: FastAPI):
 One shared instance is safe under concurrent requests. See
 [examples/fastapi_app.py](examples/fastapi_app.py) for a runnable app.
 
-### Custom httpx client
+### Custom httpx2 client
 
-Pass your own `httpx.AsyncClient` for custom SSL, proxies, event hooks, or
+Pass your own `httpx2.AsyncClient` for custom SSL, proxies, event hooks, or
 `MockTransport` in tests:
 
 ```python
-client = httpx.AsyncClient(verify="/path/to/ca.pem", timeout=60)
+client = httpx2.AsyncClient(verify="/path/to/ca.pem", timeout=60)
 async with aiopynetbox.api(url, token=token, client=client) as nb:
     ...
 ```
 
-Per httpx convention, a client you pass in is yours to close: `aclose()`
+Per httpx2 convention, a client you pass in is yours to close: `aclose()`
 and the context manager only close clients the Api created itself, so
 one client can safely back several Api instances.
 

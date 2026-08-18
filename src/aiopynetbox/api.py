@@ -7,7 +7,7 @@ import random
 from types import TracebackType
 from typing import Any, Self
 
-import httpx
+import httpx2
 
 from aiopynetbox.app import PluginsApp
 from aiopynetbox.apps_generated import (
@@ -67,7 +67,7 @@ class Api:
             Retry-After); transient 502/503/504 and connection
             failures retry for GETs only, since an ambiguous write may
             have been processed. 0 disables.
-        client: Custom httpx.AsyncClient (SSL config, proxies, mock
+        client: Custom httpx2.AsyncClient (SSL config, proxies, mock
             transports). A supplied client is yours to close; the Api
             closes only clients it creates itself.
     """
@@ -81,7 +81,7 @@ class Api:
         max_concurrency: int = 4,
         pagination: str = "offset",
         retries: int = 3,
-        client: httpx.AsyncClient | None = None,
+        client: httpx2.AsyncClient | None = None,
     ) -> None:
         if pagination not in ("offset", "cursor"):
             raise ValueError("pagination must be 'offset' or 'cursor'")
@@ -98,7 +98,7 @@ class Api:
         self._client = (
             client
             if client is not None
-            else httpx.AsyncClient(timeout=timeout, follow_redirects=True)
+            else httpx2.AsyncClient(timeout=timeout, follow_redirects=True)
         )
 
         self.circuits = CircuitsApp(self, "circuits")
@@ -128,7 +128,7 @@ class Api:
         """Close the connection pool, if this Api created it.
 
         A client passed in via `client=` is the caller's to close
-        (httpx convention), so sharing one client across Api instances
+        (httpx2 convention), so sharing one client across Api instances
         is safe.
         """
         if self._owns_client:
@@ -159,7 +159,7 @@ class Api:
         params: dict[str, Any] | None = None,
         json: Any = None,
         headers: dict[str, str] | None = None,
-    ) -> httpx.Response:
+    ) -> httpx2.Response:
         merged = {
             "Accept": "application/json",
             **self._auth_headers(),
@@ -172,7 +172,7 @@ class Api:
                 resp = await self._client.request(
                     method, url, params=params, json=json, headers=merged
                 )
-            except httpx.TransportError:
+            except httpx2.TransportError:
                 # An ambiguous failure is only safely repeatable for GETs:
                 # a timed-out write may have been processed server-side.
                 if method != "GET" or attempt >= self.retries:
@@ -199,7 +199,7 @@ class Api:
             attempt += 1
 
     @staticmethod
-    def _decode(resp: httpx.Response) -> Any:
+    def _decode(resp: httpx2.Response) -> Any:
         try:
             return resp.json()
         except ValueError:

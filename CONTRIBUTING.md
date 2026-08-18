@@ -20,7 +20,7 @@ All four checks run in CI and must pass.
 ## Testing conventions
 
 Tests run entirely against `FakeNetbox` in `tests/conftest.py`, an
-in-memory NetBox served through `httpx.MockTransport`. Tests never touch
+in-memory NetBox served through `httpx2.MockTransport`. Tests never touch
 the network and never require a real NetBox instance. If your change needs
 an endpoint or behavior the fake doesn't model yet, extend the fake.
 

@@ -24,7 +24,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-import httpx
+import httpx2
 
 DEFAULT_URL = "https://demo.netbox.dev/api/schema/"
 SRC = Path(__file__).resolve().parent.parent / "src" / "aiopynetbox"
@@ -181,7 +181,7 @@ def endpoint_stub(app: str, attr: str, filters: list[str], fields: list[str]) ->
 
 def main() -> None:
     url = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_URL
-    resp = httpx.get(
+    resp = httpx2.get(
         url,
         params={"format": "json"},
         headers={"Accept": "application/json"},
