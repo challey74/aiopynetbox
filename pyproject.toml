@@ -1,6 +1,6 @@
 [project]
 name = "aiopynetbox"
-version = "0.2.0"
+version = "0.2.1"
 description = "Fully async NetBox API client built on httpx2"
 readme = "README.md"
 authors = [

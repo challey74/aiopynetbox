@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-11-05
+
+### Added
+
+- Endpoint hints regenerated from NetBox 4.7.4, so IDEs now autocomplete
+  the new `dcim` cooling endpoints (`cooling_feeds`, `cooling_intakes`,
+  `cooling_intake_templates`, `cooling_outflows`,
+  `cooling_outflow_templates`, `cooling_sources`) and
+  `module_bay_types`, plus new filter kwargs such as `provider_network`
+  on circuits. Hints never restrict runtime behavior, so these endpoints
+  already worked before; this only adds completion and type checking.
+
 ## [0.2.0] - 2026-08-17
 
 ### Changed
@@ -67,5 +79,6 @@ Initial release.
 - A runnable FastAPI example (`examples/fastapi_app.py`) showing the
   app-state / lifespan usage pattern.
 
+[0.2.1]: https://github.com/challey74/aiopynetbox/releases/tag/v0.2.1
 [0.2.0]: https://github.com/challey74/aiopynetbox/releases/tag/v0.2.0
 [0.1.0]: https://github.com/challey74/aiopynetbox/releases/tag/v0.1.0
