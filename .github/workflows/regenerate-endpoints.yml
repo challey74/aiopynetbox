@@ -9,6 +9,7 @@ jobs:
   regenerate:
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
       pull-requests: write
     steps:
@@ -19,7 +20,8 @@ jobs:
       - run: uv run ruff format src/aiopynetbox/apps_generated.py src/aiopynetbox/hints_generated.pyi
       - run: uv run pyright
       - run: uv run pytest
-      - uses: peter-evans/create-pull-request@v8
+      - id: cpr
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore: regenerate endpoint hints from demo.netbox.dev"
           title: "chore: regenerate endpoint hints"
@@ -30,3 +32,10 @@ jobs:
             endpoints.
           branch: regenerate-endpoints
           delete-branch: true
+      # A PR opened with GITHUB_TOKEN doesn't trigger pull_request workflows,
+      # but workflow_dispatch is exempt, and its checks land on the PR head.
+      - if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
+        run: gh workflow run ci.yml --ref "$BRANCH"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.cpr.outputs.pull-request-branch }}
